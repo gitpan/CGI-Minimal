@@ -4,13 +4,19 @@ package CGI::Minimal;
 # See http://dev.perl.org/licenses/
 # Copyright 1999-2004 Benjamin Franz. All Rights Reserved.
 
-use strict;
+# I don't 'use warnings;' here because it pulls in ~ 20Kbytes of code
+# I don't use vars qw ($_query $VERSION $form_initial_read $_BUFFER);
+# or (consequently) use strict for the same reason.
 
-# don't 'use warnings;' here because it pulls in ~ 20Kbytes of code
+#use strict;
+#use warnings;
 
-use vars qw ($_query $VERSION $form_initial_read $_BUFFER);
-$VERSION = "1.13";
-
+$CGI::Minimal::_query            = undef;
+$CGI::Minimal::form_initial_read = undef;
+$CGI::Minimal::_BUFFER           = undef;
+BEGIN {
+    $CGI::Minimal::VERSION = "1.14";
+}
 if (exists $ENV{'MOD_PERL'}) {
 	$| = 1;
 	require Apache;

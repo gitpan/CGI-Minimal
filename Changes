@@ -1,3 +1,6 @@
+ 1.14 16 Oct 2004 - Tuned module load time (about a 40% improvement) and
+                    add performance tuning hints
+
  1.13 28 Sep 2004 - Removed support for Module::Build.
  
  1.12 25 Sep 2004 - Tweaked the default form parser to accept ';' as a field seperator

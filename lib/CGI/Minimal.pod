@@ -49,7 +49,51 @@ Example:
  bash> ./myscript
  a=b&b=d<return>
 
+=head2 Performance Hints
+
+If you are using this module as part of a conventional standalone CGI
+to get a speedup over using CGI.pm, don't 'use warnings;' or 'use vars'
+or 'use Carp' in your final production code. 
+
+The problem with 'use vars' or 'use warnings' is that (unless you are using
+Perl 5.8.6 or later, which was not yet out as of this writing) they add on 
+the order of 40 kilobytes of code to your load and you B<will> feel the 
+slowdown. Half of that is from the Carp module (which
+is used by both the 'vars' and 'warnings' modules.)
+
+So a well written script tuned for performance will start like this:
+
+ #!/usr/bin/perl -Tw
+ 
+ use strict;
+ use CGI::Minimal;
+ 
+ my $cgi = CGI::Minimal->new;
+
+The ultimate performance hint, of course, is use mod_perl (or another persistent
+execution environment). While you can reach around 50 or so invokations per second on
+an AMD XP2100+ processor running a simple script using CGI::Minimal, you can exceed
+400 per second using mod_perl.
+
+Here are some performance numbers using an extremely simple script
+using CGI.pm and CGI::Minimal to read a passed parameter and print it
+and also a 'null' Perl script which didn't actually read the passed cgi parameter
+but printed the same result as if it had.
+
+With 10 parallel fetches repeated as fast as possible for 20 seconds 
+with and without mod_perl the tests gave the following:
+  
+  CGI.pm       via standard CGI -  15 fetches per second
+  CGI::Minimal via standard CGI -  57 fetches per second
+  null script  via standard CGI - 103 fetches per second
+  CGI.pm       via mod_perl     - 361 fetches per second
+  CGI::Minimal via mod_perl     - 416 fetches per second
+  null script  via mod_perl     - 500 fetches per second
+
 =head1 CHANGES
+
+ 1.14 16 Oct 2004 - Tuned module load time (about a 40% improvement) and
+                    added performance hints to the documentation.
 
  1.13 28 Sep 2004 - Removed support for Module::Build from module install.
 
@@ -444,7 +488,7 @@ Benjamin Franz <snowhare@nihongo.org>
 
 =head1 VERSION
 
-Version 1.13 28 Sep 2004
+Version 1.14 16 Oct 2004
 
 =head1 COPYRIGHT
 
