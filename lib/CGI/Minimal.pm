@@ -32,7 +32,7 @@ use strict;
 use Carp;
 
 use vars qw ($_query $VERSION $form_initial_read);
-$VERSION = "1.04";
+$VERSION = "1.05";
 
 # check for mod_perl and include the 'Apache' module if needed
 if (exists $ENV{'MOD_PERL'}) {
@@ -74,6 +74,8 @@ on your behalf - you are expected to be conversant with how
 to put together any HTML or HTTP you need.
 
 =head1 CHANGES
+
+ 1.05 03 April 2000 - Fixed breakage in 'param;' from 1.04 changes
 
  1.04 03 April 2000 - Added capability to set params via the param() method
                       like 'CGI.pm' plus general code cleanup
@@ -165,20 +167,17 @@ sub param {
     my $self = shift;
     my $package = __PACKAGE__;
 
-    if (@_ == 0) {
-        croak(__PACKAGE__ . "::param() - No calling parameters passed");
-    }    
     if (1 < @_) {
         my $n_parms = @_;
         if (($n_parms % 2) == 1) {
             croak(__PACKAGE__ . "::param() - Odd number of parameters (other than 1) passed");
         }
-	my $parms = { @_ };
+	    my $parms = { @_ };
         $self->_set($parms);
         return;
     }
-    if (ref ($_[0]) eq 'HASH') {
-	my $parms = shift;
+    if ((@_ == 1) and (ref ($_[0]) eq 'HASH')) {
+	    my $parms = shift;
         $self->_set($parms);
         return;
     }
@@ -887,7 +886,7 @@ Benjamin Franz <snowhare@nihongo.org>
 
 =head1 VERSION
 
-Version 1.04 April 2000
+Version 1.05 April 2000
 
 =head1 COPYRIGHT
 

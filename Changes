@@ -1,3 +1,4 @@
+ 1.05 03 April 2000 - Fixed breakage in 'param;' from 1.04 changes 
  1.04 03 April 2000 - Added capability to set params via the param() method
                       like 'CGI.pm' plus general code cleanup
  
