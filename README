@@ -4,33 +4,11 @@ An _extremely_ lightweight CGI processing package
 designed to provide form decoding and related
 services with low overhead.
 
- 1.09 19 Mar 2002   - Exposed CGI::Minimal::reset_globals class method to support
-                      non-mod_perl persistent execution environments.
-
- 1.08 26 Jul 2001   - Added 'raw' method for obtaining a dump of the raw input buffer data
-                      without any parsing. Moved documentation into seperate POD file.
-
- 1.07 01 Dec 2000   - Added capability of taking a GET style parameter string
-                      via STDIN if running at the command line.
-
- 1.06 10 April 2000 - 'unfixed' use of quotemeta on split parameter
-                      for multi-part forms. It seems 'split' doesn't
-                      work exactly as specified in the docs....
-
- 1.05 03 April 2000 - Fixed breakage in 'param;' from 1.04 changes
-
- 1.04 03 April 2000 - Added capability to set params via the param()
-                      method like 'CGI.pm' plus general code cleanup
- 
- 1.03 02 March 2000 - 'mod_perl' compatibility added 
-
- 1.02 09 June  1999 - Initial public release.
-
-
 To install:
 
 perl Makefile.PL
 make
+make test
 make install
 
 See 'perldoc CGI::Minimal' for the documentation.

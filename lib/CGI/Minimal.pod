@@ -1,30 +1,3 @@
-#######################################################################
-#
-# The most current release can always be found at
-# <URL:http://www.nihongo.org/snowhare/utilities/>
-#
-# THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS
-# OR IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-# PARTICULAR PURPOSE.
-#
-# Use of this software in any way or in any form, source or binary,
-# is not allowed in any country which prohibits disclaimers of any
-# implied warranties of merchantability or fitness for a particular
-# purpose or any disclaimers of a similar nature.
-#
-# IN NO EVENT SHALL I BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
-# SPECIAL, INCIDENTAL,  OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE
-# USE OF THIS SOFTWARE AND ITS DOCUMENTATION (INCLUDING, BUT NOT
-# LIMITED TO, LOST PROFITS) EVEN IF I HAVE BEEN ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE
-#
-# This program is free software; you can redistribute it
-# and/or modify it under the same terms as Perl itself.
-#
-# Copyright 1999-2002 Benjamin Franz. All Rights Reserved.
-#
-#######################################################################
 
 =head1 NAME
 
@@ -57,6 +30,18 @@ on your behalf - you are expected to be conversant with how
 to put together any HTML or HTTP you need.
 
 =head1 CHANGES
+
+ 1.10 04 Apr 2003 - Added 'binmode STDIN' on module load to correct for
+                    windows defaulting to 7-bit filehandles. Fixed problem where
+                    split would fail on unusual MIME boundary strings.
+                    Problems noticed by Markus Wichitill.
+
+                    Deferred loading of 'Carp' unless actually needed.
+
+                    Small code cleanups. Removed big disclaimer from
+                    .pm and moved in pod to 'DISCLAIMERS' section
+
+                    Added tests
 
  1.09 19 Mar 2002 - Exposed 'reset_globals' static method for support
                     of non-mod_perl persistent perl execution environments.
@@ -395,14 +380,35 @@ Benjamin Franz <snowhare@nihongo.org>
 
 =head1 VERSION
 
-Version 1.09 19 Mar 2002 
+Version 1.10 04 Apr 2002
 
 =head1 COPYRIGHT
 
-Copyright (c) Benjamin Franz 1999-2002. All rights reserved.
+Copyright (c) Benjamin Franz 1999-2003. All rights reserved.
 
  This program is free software; you can redistribute it
  and/or modify it under the same terms as Perl itself.
+
+=head1 DISCLAIMER
+
+The most current release can always be found at
+<URL:http://www.nihongo.org/snowhare/utilities/>
+
+THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS
+OR IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+PARTICULAR PURPOSE.
+
+Use of this software in any way or in any form, source or binary,
+is not allowed in any country which prohibits disclaimers of any
+implied warranties of merchantability or fitness for a particular
+purpose or any disclaimers of a similar nature.
+
+IN NO EVENT SHALL I BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
+SPECIAL, INCIDENTAL,  OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE
+USE OF THIS SOFTWARE AND ITS DOCUMENTATION (INCLUDING, BUT NOT
+LIMITED TO, LOST PROFITS) EVEN IF I HAVE BEEN ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE
 
 =head1 SEE ALSO
 

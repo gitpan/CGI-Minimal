@@ -1,3 +1,17 @@
+ 1.10 04 Apr 2003 - Added 'binmode STDIN' on module load to correct for
+                    windows defaulting to 7-bit filehandles. Fixed problem where
+                    split would fail on unusual MIME boundary strings.
+                    Problems noticed by Markus Wichitill.
+
+                    Deferred loading of 'Carp' unless actually needed.
+
+                    Small code cleanups.
+
+                    Removed big disclaimer from .pm and moved
+                    in pod to 'DISCLAIMERS' section
+                    
+                    Added tests
+ 
  1.09 19 Mar 2002 - Exposed CGI::Minimal::reset_globals class method to support non-
                     mod_perl persistent execution environments.
 

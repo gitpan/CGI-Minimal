@@ -5,3 +5,4 @@ README
 TODO
 lib/CGI/Minimal.pm
 lib/CGI/Minimal.pod
+t/01_decode_form.t
