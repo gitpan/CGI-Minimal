@@ -1,3 +1,5 @@
+ 1.13 28 Sep 2004 - Removed support for Module::Build.
+ 
  1.12 25 Sep 2004 - Tweaked the default form parser to accept ';' as a field seperator
                     in addition to '&'. Change suggested by Peter Karman.
                     Eliminated the explicit application/sgml-form-urlencoded support

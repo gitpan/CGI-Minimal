@@ -9,7 +9,7 @@ use strict;
 # don't 'use warnings;' here because it pulls in ~ 20Kbytes of code
 
 use vars qw ($_query $VERSION $form_initial_read $_BUFFER);
-$VERSION = "1.12";
+$VERSION = "1.13";
 
 if (exists $ENV{'MOD_PERL'}) {
 	$| = 1;

@@ -51,6 +51,8 @@ Example:
 
 =head1 CHANGES
 
+ 1.13 28 Sep 2004 - Removed support for Module::Build from module install.
+
  1.12 25 Sep 2004 - Tweaked the default form parser to accept ';' as a field seperator
                     in addition to '&'. Change suggested by Peter Karman.
                     Eliminated the explicit application/sgml-form-urlencoded support
@@ -442,7 +444,7 @@ Benjamin Franz <snowhare@nihongo.org>
 
 =head1 VERSION
 
-Version 1.12 25 Sep 2004
+Version 1.13 28 Sep 2004
 
 =head1 COPYRIGHT
 
