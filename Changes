@@ -1,3 +1,9 @@
+ 1.16 12 Nov 2004 - Added CGI::Simple to the benchmarks table. Tweaked regresssion
+                    tests for MS-Windows. Added 'delete' and 'delete_all'
+                    methods and regression tests. Added ':preload' flag for
+                    preloading all sub-components at module 'use' time.
+                    Fixed bug introduced with 1.15 in param value setting code.
+
  1.15 09 Nov 2004 - Added more regression tests. Fixed url encoder to comply
                     better with RFC2396. Tuned performance some more. Extended
                     benchmarks table to cover more CGI form decoders.

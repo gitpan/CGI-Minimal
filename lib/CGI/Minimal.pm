@@ -5,29 +5,43 @@ package CGI::Minimal;
 # Copyright 1999-2004 Benjamin Franz. All Rights Reserved.
 #
 # I don't 'use warnings;' here because it pulls in ~ 40Kbytes of code
-# I don't use vars qw ($_query $VERSION $form_initial_read $_BUFFER);
-# or use strict for the same reason.
+# I don't use vars qw ($_query $VERSION $form_initial_read $_BUFFER); or
+# use strict for the same reason.
 
 $CGI::Minimal::_query            = undef;
 $CGI::Minimal::form_initial_read = undef;
 $CGI::Minimal::_BUFFER           = undef;
+
 BEGIN {
-	$CGI::Minimal::VERSION = "1.15";
-}
-if (exists $ENV{'MOD_PERL'}) {
-	$| = 1;
-	require Apache;
+	$CGI::Minimal::VERSION = "1.16";
+    if (exists $ENV{'MOD_PERL'}) {
+	    $| = 1;
+	    require Apache;
+	    require CGI::Minimal::Misc;
+	    require CGI::Minimal::Multipart;
+    }
 }
 
 binmode STDIN;
-
 &reset_globals;
+
+####
+
+sub import {
+	my $class = shift;
+	my @values = @_;
+	if (grep(/^:preload$/, @values)) {
+		require CGI::Minimal::Misc;
+		require CGI::Minimal::Multipart;
+	}
+}
 
 ####
 
 sub new {
 
 	if ($form_initial_read) {
+		binmode STDIN;
 		$_query->_read_form;
 		$form_initial_read = 0;
 	}
@@ -50,10 +64,44 @@ sub reset_globals {
 	max_read_size(1000000);
 	$_query->{$pkg}->{'field_names'} = [];
 	$_query->{$pkg}->{'field'} = {};
+	$_query->{$pkg}->{'form_truncated'} = undef;
 }
 
 # For backward compatibility 
 sub _reset_globals { reset_globals; }
+
+###
+
+sub delete_all { 
+    my $self = shift;
+    my $pkg  = __PACKAGE__;
+	$_query->{$pkg}->{'field_names'} = [];
+	$_query->{$pkg}->{'field'} = {};
+    return;
+}
+
+####
+
+sub delete {
+	my $self = shift;
+	my $pkg  = __PACKAGE__;
+	my $vars = $self->{$pkg};
+	
+	my @names_list   = @_;
+	my %tagged_names = map { $_ => 1 } @names_list;    
+	my @parm_names   = @{$vars->{'field_names'}};
+	my $fields       = [];
+	my $data         = $vars->{'field'};
+	foreach my $parm (@parm_names) {
+		if ($tagged_names{$parm}) {
+			delete $data->{$parm};
+		} else {
+			push (@$fields, $parm);
+		}
+	}
+	$vars->{'field_names'} = $fields;
+	return;
+}
 
 ####
 
@@ -69,13 +117,13 @@ sub param {
 		}
 		my $parms = { @_ };
 		require CGI::Minimal::Misc;
-		$self->_set($parms);
+		$self->_internal_set($parms);
 		return;
 
 	} elsif ((@_ == 1) and (ref ($_[0]) eq 'HASH')) {
 		my $parms = shift;
 		require CGI::Minimal::Misc;
-		$self->_set($parms);
+		$self->_internal_set($parms);
 		return;
 	}
 	my $vars = $self->{$pkg};

@@ -11,4 +11,5 @@ lib/CGI/Minimal.pod
 t/01_decode_form.t
 t/02_encodings.t
 t/03_misc.t
+t/04_modify_parameters.t
 META.yml                                 Module meta-data (added by MakeMaker)
