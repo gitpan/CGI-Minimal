@@ -32,7 +32,7 @@ use strict;
 use Carp;
 
 use vars qw ($_query $VERSION $form_initial_read);
-$VERSION = "1.05";
+$VERSION = "1.06";
 
 # check for mod_perl and include the 'Apache' module if needed
 if (exists $ENV{'MOD_PERL'}) {
@@ -74,6 +74,10 @@ on your behalf - you are expected to be conversant with how
 to put together any HTML or HTTP you need.
 
 =head1 CHANGES
+
+ 1.06 10 April 2000 - 'Unfixed' use of 'quotemeta' for multipart
+                       boundaries. 'split' is doing the 'wrong thing'
+                       according to the specs...
 
  1.05 03 April 2000 - Fixed breakage in 'param;' from 1.04 changes
 
@@ -794,7 +798,6 @@ sub _burst_multipart_buffer {
     my ($buffer,$boundary)=@_;
 
     # Split the name-value pairs
-    $boundary   = quotemeta($boundary);
     my (@pairs) = split(/$boundary/, $buffer);
 
     # Initialize the field hash and the field_names array
@@ -886,7 +889,7 @@ Benjamin Franz <snowhare@nihongo.org>
 
 =head1 VERSION
 
-Version 1.05 April 2000
+Version 1.06 April 2000
 
 =head1 COPYRIGHT
 

@@ -5,7 +5,11 @@ designed to provide form decoding and related
 services with low overhead.
 
 
- 1.04 03 April 2000 - Fixed breakage in 'param;' from 1.04 changes
+ 1.06 10 April 2000 - 'unfixed' use of quotemeta on split parameter
+                      for multi-part forms. It seems 'split' doesn't
+                      work exactly as specified in the docs....
+
+ 1.05 03 April 2000 - Fixed breakage in 'param;' from 1.04 changes
 
  1.04 03 April 2000 - Added capability to set params via the param()
                       method like 'CGI.pm' plus general code cleanup
