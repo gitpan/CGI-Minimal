@@ -1,0 +1,411 @@
+#######################################################################
+#
+# The most current release can always be found at
+# <URL:http://www.nihongo.org/snowhare/utilities/>
+#
+# THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS
+# OR IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+# PARTICULAR PURPOSE.
+#
+# Use of this software in any way or in any form, source or binary,
+# is not allowed in any country which prohibits disclaimers of any
+# implied warranties of merchantability or fitness for a particular
+# purpose or any disclaimers of a similar nature.
+#
+# IN NO EVENT SHALL I BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT,
+# SPECIAL, INCIDENTAL,  OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE
+# USE OF THIS SOFTWARE AND ITS DOCUMENTATION (INCLUDING, BUT NOT
+# LIMITED TO, LOST PROFITS) EVEN IF I HAVE BEEN ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE
+#
+# This program is free software; you can redistribute it
+# and/or modify it under the same terms as Perl itself.
+#
+# Copyright 1999-2002 Benjamin Franz. All Rights Reserved.
+#
+#######################################################################
+
+=head1 NAME
+
+CGI::Minimal - A lightweight CGI form processing pacakge
+
+=head1 SYNOPSIS
+
+ use CGI::Minimal;
+
+ my $cgi = CGI::Minimal->new;
+ if ($cgi->truncated) {
+    &scream_about_bad_form;
+    exit;
+ }
+ my ($form_field_value) = $cgi->param('some_field_name');
+
+=head1 DESCRIPTION
+
+Provides a micro-weight alternative to the CPAN CGI.pm module
+
+Rather than attempt to address every possible need of a CGI
+programmer, it provides the _minimum_ functions needed for CGI such
+as form decoding (including file upload forms), URL encoding
+and decoding, HTTP usable date generation (RFC1123 compliant
+dates) and _basic_ escaping and unescaping of HTMLized text.
+
+The form decoding interface is somewhat compatible with the
+CGI.pm module. No provision is made for generating HTTP or HTML
+on your behalf - you are expected to be conversant with how
+to put together any HTML or HTTP you need.
+
+=head1 CHANGES
+
+ 1.09 19 Mar 2002 - Exposed 'reset_globals' static method for support
+                    of non-mod_perl persistent perl execution environments.
+
+ 1.08 26 Jul 2001 - Added 'raw' method for obtaining a dump of the raw input buffer data
+                    without any parsing. Moved documentation into seperate POD file.
+
+ 1.07 01 Dec 2000 - Added capability of taking a GET style parameter string
+                         via STDIN if running at the command line.
+
+ 1.06 10 Apr 2000 - 'Unfixed' use of 'quotemeta' for multipart
+                    boundaries. 'split' is doing the 'wrong thing'
+                    according to the specs...
+
+ 1.05 03 Apr 2000 - Fixed breakage in 'param;' from 1.04 changes
+
+ 1.04 03 Apr 2000 - Added capability to set params via the param() method
+                         like 'CGI.pm' plus general code cleanup
+
+ 1.03 02 Mar 2000 - 'mod_perl' compatibility added
+
+ 1.02 09 Jun 1999 - Initial public release.
+
+=cut
+
+=head1 METHODS
+
+=cut
+
+######################################################################
+
+=over 4
+
+=item new;
+
+Creates a new instance of the CGI::Minimal object and decodes
+any type of form (GET/POST). Only one 'true' object is generated -
+all subsequent calls return an alias of the one object (a 'Singleton'
+pattern).
+
+Example:
+
+ use CGI::Minimal;
+
+ my $cgi = CGI::Minimal->new;
+
+=back
+
+=cut
+
+
+=over 4
+
+=item param([$fieldname]);
+
+Called as C<$cgi-E<gt>param();> it returns the list of all defined
+form fields in the same order they appear in the data from the
+user agent.
+
+Called as C<$cgi-E<gt>param($fieldname);> it returns the value (or
+array of values for multiple occurances of the same field name) assigned
+to that $fieldname. If there is more than one value, the values are
+returned in the same order they appeared in the data from user agent.
+
+Examples:
+
+  my (@form_fields) = $cgi->param;
+
+  my (@multi_pick_field) = $cgi->param('pick_field_name');
+
+  my ($form_field_value) = $cgi->param('some_field_name');
+
+You can also use the param method to set param values to new values.
+These values will be returned by any invokation of a CGI::Minimal object
+as if they had been found in the original passed data.
+
+Examples:
+
+    $cgi->param( 'name' => 'Joe Shmoe' );
+
+    $cgi->param({ 'name' => 'Joe Shmoe', 'birth_date' => '06/25/1966' });
+
+    $cgi->param({ 'pick_list' => ['01','05','07'] });
+
+=back
+
+=cut
+
+=over 4
+
+=item param_mime([$fieldname]);
+
+Called as C<$cgi-E<gt>param_mime();> it returns the list of all defined
+form fields in the same order they appear in the data from the
+user agent.
+
+Called as C<$cgi-E<gt>param_mime($fieldname);> it returns the MIME
+type (or array of MIME types for multiple occurances of the same field
+name) assigned to that $fieldname. If there is more than one value, the
+values are returned in the same order they appeared in the data from user
+agent.
+
+This is only meaningful when doing Form Based File Uploads and
+should probably not be trusted even then since it depends on the
+_browser_ correctly identifying what it is sending.
+
+=back
+
+=cut
+
+=over 4
+
+=item param_filename([$fieldname]);
+
+Called as C<$cgi-E<gt>param_filename();> it returns the list of all
+defined form fields in the same order they appear in the data from the
+user agent.
+
+Called as C<$cgi-E<gt>param_filename($fieldname);> it returns the
+file name (or array of file names for multiple occurances of the same field
+name) assigned to that $fieldname. If there is more than one value, the
+values are returned in the same order they appeared in the data from user
+agent.
+
+This is only meaningful when doing Form Based File Uploads.
+
+=back
+
+=cut
+
+=over 4
+
+=item raw;
+
+Returns a copy of the raw form data. Returns 'undef' if the form
+has not been parsed yet.
+
+=back
+
+=cut
+
+=over 4
+
+=item date_rfc1123($time);
+
+Takes a unix time tick value and returns a RFC1123 compliant date
+as a formatted text string suitable for direct use in Expires,
+Last-Modified or other HTTP headers (with the exception of
+'Set-Cookie', which requires a different format not generated
+here. See 'CGI::Cookie' for cookie generation).
+
+Example:
+
+ print "Expires: ",$cgi->date_rfc1123(time + 3600),"\015\012";
+
+=back
+
+=cut
+
+=over 4
+
+=item calling_parms_table;
+
+Returns a formatted HTML table containing all the form and environment
+variables for debugging purposes
+
+Example:
+
+  print $cgi->calling_parms_table;
+
+=back
+
+=cut
+
+=over 4
+
+=item url_encode($string);
+
+Returns URL encoding of input string (URL unsafe codes are
+escaped to %xx form)
+
+Example:
+
+ my $url_encoded_string = $cgi->url_encode($string);
+
+=back
+
+=cut
+
+=over 4
+
+=item url_decode($string);
+
+Returns URL *decoding* of input string (%xx substitutions
+are decoded to their actual values).
+
+Example:
+
+ my $url_decoded_string = $cgi->url_decode($string);
+
+=back
+
+=cut
+
+=over 4
+
+=item htmlize($string);
+
+Returns HTML 'safe' encoding of input string. Replaces &,>,< and "
+with their named entity codes (&amp, &gt; &lt; and &quot;)
+
+Example:
+
+ my $html_escaped_string = $cgi->htmlize($string);
+
+=back
+
+=cut
+
+=over 4
+
+=item dehtmlize($string);
+
+Undoes basic HTML encoding of input string. Replaces &amp;,
+&gt;, &lt; and &quot; named entity codes with their actual values.
+NOT a general purpose entity decoder.
+
+=back
+
+=cut
+
+=over 4
+
+=item truncated;
+
+Returns '1' if the read form was shorter than the
+Content-Length that was specified by the submitting
+user agent (ie the data from a form uploaded by a
+web browser was cut off before all the data was received).
+
+Returns '0' if the form was NOT truncated.
+
+Example:
+
+  use CGI::Minimal;
+
+  my $cgi = CGI::Minimal->new;
+  if ($cgi->truncated) {
+    &bad_form_upload;
+  } else {
+    &good_form_upload;
+  }
+
+'truncated' will also return '1' if the form length
+received would have exceeded the set 'max_read_length'.
+
+=back
+
+=cut
+
+=head1 STATIC METHODS
+
+=cut
+
+######################################################################
+
+=over 4
+
+=item CGI::Minimal::max_read_size($size);
+
+Sets the maximum number of bytes/octets that the
+CGI decoder will accept. By default, 1000000 bytes/octets.
+This must be called *BEFORE* calling 'new' for the first
+time for it to actually affect form decoding.
+
+Example:
+
+  use CGI::Minimal;
+
+  CGI::Minimal::max_read_size(1000000);
+  my $cgi = CGI::Minimal->new;
+
+=back
+
+=cut
+
+=over 4
+
+=item CGI::Minimal::reset_globals;
+
+Sets the CGI::Minimal object to it's initial state (the
+state it is in before calling 'new' for the first time
+in a CGI interaction)
+
+This static method not needed if you are running CGI::Minimal
+either as a traditional CGI script or under mod_perl. In
+other persistent execution environments you need to call
+this static method _before_ calling ->new or the module
+will not 'forget' the data parameters passed
+from the last time it was executed.
+
+Ex.:
+
+ use CGI::Minimal;
+
+ CGI::Minimal::reset_globals;
+ my $cgi = CGI::Minimal->new;
+
+Note: This resets the the 'max_read_size' back to its default
+of 1_000_000 octets ('bytes'); so if you want to use a different
+size, you need to restore it after you do the 'reset_globals' call.
+
+Ex.:
+
+ use CGI::Minimal;
+
+ CGI::Minimal::reset_globals;
+ CGI::Minimal::max_read_size(200000);
+ my $cgi = CGI::Minimal->new;
+
+=back
+
+=cut
+
+=head1 BUGS
+
+None known.
+
+=head1 TODO
+
+Add regression tests.
+
+=head1 AUTHORS
+
+Benjamin Franz <snowhare@nihongo.org>
+
+=head1 VERSION
+
+Version 1.09 19 Mar 2002 
+
+=head1 COPYRIGHT
+
+Copyright (c) Benjamin Franz 1999-2002. All rights reserved.
+
+ This program is free software; you can redistribute it
+ and/or modify it under the same terms as Perl itself.
+
+=head1 SEE ALSO
+
+CGI
+
+=cut

@@ -2,4 +2,6 @@ Changes
 MANIFEST
 Makefile.PL
 README
+TODO
 lib/CGI/Minimal.pm
+lib/CGI/Minimal.pod

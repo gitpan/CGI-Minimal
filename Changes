@@ -1,12 +1,21 @@
- 1.06 10 April 2000 - 'unfixed' use of quotemeta for splitting
-                      multi-part forms. 'split' seems broken
-                      according to the doc pages....
+ 1.09 19 Mar 2002 - Exposed CGI::Minimal::reset_globals class method to support non-
+                    mod_perl persistent execution environments.
 
- 1.05 03 April 2000 - Fixed breakage in 'param;' from 1.04 changes 
+ 1.08 26 Jul 2001 - Added 'raw' method for obtaining a dump of the raw input buffer data
+                    without any parsing. Seperated POD docs into a distinct .pod file.
 
- 1.04 03 April 2000 - Added capability to set params via the param() method
-                      like 'CGI.pm' plus general code cleanup
+ 1.07 01 Dec 2000 - Added capability of taking a GET style parameter string
+                    via STDIN if running at the command line.
+
+ 1.06 10 Apr 2000 - 'unfixed' use of quotemeta for splitting
+                    multi-part forms. 'split' seems broken
+                    according to the doc pages....
+
+ 1.05 03 Apr 2000 - Fixed breakage in 'param;' from 1.04 changes 
+
+ 1.04 03 Apr 2000 - Added capability to set params via the param() method
+                    like 'CGI.pm' plus general code cleanup
  
- 1.03 02 March 2000 - 'mod_perl' compatibility added 
+ 1.03 02 Mar 2000 - 'mod_perl' compatibility added 
 
- 1.02 09 June 1999  - Initial public release.
+ 1.02 09 Jun 1999 - Initial public release.
