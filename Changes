@@ -1,0 +1,6 @@
+ 1.04 03 April 2000 - Added capability to set params via the param() method
+                      like 'CGI.pm' plus general code cleanup
+ 
+ 1.03 02 March 2000 - 'mod_perl' compatibility added 
+
+ 1.02 09 June 1999  - Initial public release.
