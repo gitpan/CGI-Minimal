@@ -8,7 +8,7 @@ package CGI::Minimal;
 use strict;
 
 use vars qw ($_query $VERSION $form_initial_read $_BUFFER);
-$VERSION = "1.10";
+$VERSION = "1.11";
 
 if (exists $ENV{'MOD_PERL'}) {
 	$| = 1;

@@ -31,6 +31,10 @@ to put together any HTML or HTTP you need.
 
 =head1 CHANGES
 
+ 1.11 28 Sep 2003 - Tweaked test script to avoid warnings about
+                    opening STDIN filehandle for writing. No functional
+                    changes.
+
  1.10 04 Apr 2003 - Added 'binmode STDIN' on module load to correct for
                     windows defaulting to 7-bit filehandles. Fixed problem where
                     split would fail on unusual MIME boundary strings.

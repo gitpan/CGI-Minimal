@@ -104,6 +104,7 @@ sub test_x_www {
 ######################################################
 
 sub test_multipart_form {
+    local $^W;
 
     my $basic_boundary = 'lkjsdlkjsd';
     my @boundaries_list = ();
