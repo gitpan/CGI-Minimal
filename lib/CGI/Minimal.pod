@@ -71,26 +71,41 @@ So a well written script tuned for performance will start like this:
  my $cgi = CGI::Minimal->new;
 
 The ultimate performance hint, of course, is use mod_perl (or another persistent
-execution environment). While you can reach around 50 or so invokations per second on
+execution environment). While you can reach around 70 or so invokations per second on
 an AMD XP2100+ processor running a simple script using CGI::Minimal, you can exceed
 400 per second using mod_perl.
 
 Here are some performance numbers using an extremely simple script
-using CGI.pm and CGI::Minimal to read a passed parameter and print it
-and also a 'null' Perl script which didn't actually read the passed cgi parameter
-but printed the same result as if it had.
+using CGI.pm, CGI::Lite, CGI::Deurl, cgi-lib.pl, CGI::Thin
+and CGI::Minimal to read a single passed parameter (a=b) and print it.
 
-With 10 parallel fetches repeated as fast as possible for 20 seconds 
-with and without mod_perl the tests gave the following:
+Also included are a 'null' Perl script and a 'null' compiled C program which
+didn't actually read the passed cgi parameter but printed the same results as if they had.
+
+Notably, mod_perl outperforms the compiled C program by
+quite a lot for this simple case.
+
+With 10 parallel fetches repeated as fast as possible for 30 seconds 
+with and without mod_perl (if supported) the tests gave the following
+results (sorted by speed):
   
-  CGI.pm       via standard CGI -  15 fetches per second
-  CGI::Minimal via standard CGI -  57 fetches per second
-  null script  via standard CGI - 103 fetches per second
-  CGI.pm       via mod_perl     - 361 fetches per second
-  CGI::Minimal via mod_perl     - 416 fetches per second
-  null script  via mod_perl     - 500 fetches per second
+  CGI.pm (3.05)       via standard CGI -  16 fetches per second
+  CGI::Deurl (1.08)   via standard CGI -  36 fetches per second
+  CGI::Thin (0.52)    via standard CGI -  38 fetches per second
+  CGI::Lite (2.02)    via standard CGI -  52 fetches per second
+  CGI::Minimal (1.15) via standard CGI -  70 fetches per second
+  cgi-lib.pl (2.18)   via standard CGI -  71 fetches per second
+  null Perl script    via standard CGI - 103 fetches per second
+  null C program      via standard CGI - 174 fetches per second
+  CGI.pm (3.05)       via mod_perl     - 386 fetches per second
+  CGI::Minimal (1.15) via mod_perl     - 417 fetches per second
+  null Perl script    via mod_perl     - 500 fetches per second
 
 =head1 CHANGES
+
+ 1.15 9 Nov 2004  - Added more regression tests. Tweaked url encoder to comply
+                    better with RFC2396. Tuned performance some more. Extended
+                    benchmarks table to cover more CGI form decoders.
 
  1.14 16 Oct 2004 - Tuned module load time (about a 40% improvement) and
                     added performance hints to the documentation.
@@ -488,7 +503,7 @@ Benjamin Franz <snowhare@nihongo.org>
 
 =head1 VERSION
 
-Version 1.14 16 Oct 2004
+Version 1.15 9 Nov 2004
 
 =head1 COPYRIGHT
 

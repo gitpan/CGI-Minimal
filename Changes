@@ -1,3 +1,7 @@
+ 1.15 09 Nov 2004 - Added more regression tests. Fixed url encoder to comply
+                    better with RFC2396. Tuned performance some more. Extended
+                    benchmarks table to cover more CGI form decoders.
+
  1.14 16 Oct 2004 - Tuned module load time (about a 40% improvement) and
                     add performance tuning hints
 

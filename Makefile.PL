@@ -6,5 +6,8 @@ WriteMakefile(
     'VERSION_FROM'   => 'lib/CGI/Minimal.pm',
     'linkext'        => { LINKTYPE=>'' },	# no link needed
     'dist'           => {'COMPRESS'=>'gzip -9f', 'SUFFIX' => 'gz',
-	                 'ZIP'=>'/usr/bin/zip','ZIPFLAGS'=>'-rl'}
+	                 'ZIP'=>'/usr/bin/zip','ZIPFLAGS'=>'-rl'},
+    'PREREQ_PM'      => {
+               'Carp' => 0,
+    }, 
 );
