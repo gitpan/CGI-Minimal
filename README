@@ -1,0 +1,14 @@
+CGI::Minimal
+
+An _extremely_ lightweight CGI processing package 
+designed to provide form decoding and related
+services with low overhead.
+
+To install:
+
+perl Makefile.PL
+make
+make install
+
+Type 'perldoc CGI::Minimal' for the documentation
+
