@@ -1,4 +1,3 @@
-#!/usr/bin/perl -w
 package CGI::Minimal;
 
 #######################################################################
@@ -31,14 +30,16 @@ package CGI::Minimal;
 
 use strict;
 use vars qw ($_query $VERSION $form_initial_read);
-$VERSION = "1.02";
-$form_initial_read = 1;
-$_query = {};
-bless $_query;
-$_query->{'jcgi'}{'max_buffer'}     = 1000000;
-$_query->{'jcgi'}{'sgml_safe_mode'} = 0;
-@{$$_query{'jcgi'}{'field_names'}}  = ();
-%{$$_query{'jcgi'}{'field'}}        = ();
+$VERSION = "1.03";
+
+# check for mod_perl and include the 'Apache' module if needed
+if (exists $ENV{'MOD_PERL'}) {
+    $| = 1;
+    require Apache;
+}
+
+# Initialize the CGI global variables
+&_reset_globals;
 
 =head1 NAME
 
@@ -72,9 +73,9 @@ to put together any HTML or HTTP you need.
 
 =head1 CHANGES
 
-=head2 1.02 09 Jun 1999
+ 1.03 02 March 2000 - 'mod_perl' compatibility added 
 
-Initial public release.
+ 1.02 09 June 1999  - Initial public release.
 
 =cut
 
@@ -109,6 +110,10 @@ sub new {
 		$_query->_read_form;
 		$form_initial_read = 0;
 	}
+    if (exists $ENV{'MOD_PERL'}) {
+        Apache->request->register_cleanup(\&CGI::Minimal::_reset_globals);
+    }
+
 	$_query;
 }
 
@@ -615,9 +620,11 @@ sub _read_get {
 	my ($self) = shift;
 
 	my ($buffer)='';
-	if (defined($ENV{'QUERY_STRING'})) {
-		$buffer = $ENV{'QUERY_STRING'};
-	}
+    if (exists $ENV{'MOD_PERL'}) {
+              $buffer = Apache->request->args;
+    } else {
+              $buffer = $ENV{'QUERY_STRING'} if (defined $ENV{'QUERY_STRING'});
+    }
 	my ($form_type);
 
 	if ( (! defined($ENV{'CONTENT_TYPE'})) || ($ENV{'CONTENT_TYPE'} =~ m#^application/x-www-form-urlencoded$#oi)) {
@@ -756,6 +763,24 @@ sub _burst_multipart_buffer {
 	}
 }
 
+##########################################################################
+# _reset_globals;
+#
+# Sets the CGI::Minimal object to it's initial state (before
+# calling 'new' for the first time in a CGI interaction)
+#
+##########################################################################
+sub _reset_globals {
+    $form_initial_read = 1;
+    $_query = {};
+    bless $_query;
+    $_query->{'jcgi'}{'max_buffer'}     = 1000000;
+    $_query->{'jcgi'}{'sgml_safe_mode'} = 0;
+    @{$$_query{'jcgi'}{'field_names'}}  = ();
+    %{$$_query{'jcgi'}{'field'}}        = ();
+}
+
+##########################################################################
 =head1 BUGS
 
 None known.
@@ -770,9 +795,9 @@ Benjamin Franz <snowhare@nihongo.org>
 
 =head1 VERSION
 
-Version 1.02 June 1999
+Version 1.03 March 2000
 
-Copyright (c) Benjamin Franz 1999. All rights reserved.
+Copyright (c) Benjamin Franz 1999,2000. All rights reserved.
 
  This program is free software; you can redistribute it
  and/or modify it under the same terms as Perl itself.
