@@ -29,7 +29,54 @@ CGI.pm module. No provision is made for generating HTTP or HTML
 on your behalf - you are expected to be conversant with how
 to put together any HTML or HTTP you need.
 
+The parser accepts either '&' or ';' as CGI form field seperators.
+
+IOW
+
+  a=b;c=d
+
+  a=b&c=d
+
+both will decode as a=b and c=d
+
+The module supports command line testing of scripts by letting you type a GET
+style argument followed by pressing the 'enter/return' key
+when the module is called to decode a form when running a script
+from the shell.
+
+Example:
+
+ bash> ./myscript
+ a=b&b=d<return>
+
 =head1 CHANGES
+
+ 1.12 25 Sep 2004 - Tweaked the default form parser to accept ';' as a field seperator
+                    in addition to '&'. Change suggested by Peter Karman.
+                    Eliminated the explicit application/sgml-form-urlencoded support
+                    as redundant (it still works, it is just not explicitly different
+                    than application/x-www-form-urlencoded support anymore).
+
+                    Adjusted the multipart form parser to be more robust against
+                    malformed MIME boundaries and the build tests to work around a
+                    bug in Perl 5.8.0 UTF8ness and split.
+
+                    Added documentation of command line script testing behavior.
+
+                    Tightened up the code to reduce size (went from 14.9K to 11K).
+
+                    Removed the 'sgml_safe_mode' redirect code since there
+                    was no exposed interface to it anyway.
+
+                    Squashed a bug where the global buffer might fail to initialize
+                    correctly for 0 byte POST forms (only impacted  use of the 'raw'
+                    method for POST use).
+
+                    Added regression test for form truncation
+
+                    Added LICENSE section to documentation
+
+                    Added Module::Build installation support
 
  1.11 28 Sep 2003 - Tweaked test script to avoid warnings about
                     opening STDIN filehandle for writing. No functional
@@ -46,6 +93,7 @@ to put together any HTML or HTTP you need.
                     .pm and moved in pod to 'DISCLAIMERS' section
 
                     Added tests
+
 
  1.09 19 Mar 2002 - Exposed 'reset_globals' static method for support
                     of non-mod_perl persistent perl execution environments.
@@ -129,6 +177,16 @@ Examples:
     $cgi->param({ 'name' => 'Joe Shmoe', 'birth_date' => '06/25/1966' });
 
     $cgi->param({ 'pick_list' => ['01','05','07'] });
+
+Starting with the 1.12 version, CGI::Minimal accepts the ';' character
+as a form field seperator in addition to the '&'.
+
+IOW: a=b;c=d will decode as well as a=b&c=d in form submissions. This is
+to provide SGML/XML compatibility for those needing it. Since ';' has
+always been escaped to %3e by the url_encode method, this should only affect
+people who are already doing the wrong thing with their forms by
+not escaping their data correctly. This is also compatible with what the CGI.pm
+module does.
 
 =back
 
@@ -376,27 +434,33 @@ None known.
 
 =head1 TODO
 
-Add regression tests.
+Add more regression tests.
 
-=head1 AUTHORS
+=head1 AUTHOR
 
 Benjamin Franz <snowhare@nihongo.org>
 
 =head1 VERSION
 
-Version 1.10 04 Apr 2002
+Version 1.12 25 Sep 2004
 
 =head1 COPYRIGHT
 
-Copyright (c) Benjamin Franz 1999-2003. All rights reserved.
+Copyright (c) Benjamin Franz 1999-2004. All rights reserved.
 
- This program is free software; you can redistribute it
- and/or modify it under the same terms as Perl itself.
+=head1 LICENSE
+
+This program is free software; you can redistribute it
+and/or modify it under the same terms and conditions as
+Perl itself.
+
+This means that you can, at your option, redistribute it and/or modify it under
+either the terms the GNU Public License (GPL) version 1 or later, or under the
+Perl Artistic License.
+
+See http://dev.perl.org/licenses/
 
 =head1 DISCLAIMER
-
-The most current release can always be found at
-<URL:http://www.nihongo.org/snowhare/utilities/>
 
 THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS
 OR IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE

@@ -4,12 +4,13 @@ use strict;
 use lib ('./blib','./lib','../blib','../lib');
 use CGI::Minimal;
 
-my $do_tests = [1..3];
+my $do_tests = [1..4];
 
 my $test_subs = {
      1 => { -code => \&test_x_www,          -desc => 'decode application/x-www-form-urlencoded   ' },
      2 => { -code => \&test_sgml_form,      -desc => 'decode application/sgml-form-urlencoded    ' },
      3 => { -code => \&test_multipart_form, -desc => 'decode multipart/form-data                 ' },
+     4 => { -code => \&test_truncation,     -desc => 'detect form truncation                     ' },
 };
 
 run_tests($test_subs,$do_tests);
@@ -40,7 +41,7 @@ sub test_sgml_form {
     my @form_keys   = keys %$string_pairs;
     my @param_keys  = $cgi->param;
     if ($#form_keys != $#param_keys) {
-        return 'failed : Expected 3 parameters, found ' . ($#param_keys + 1);
+        return 'failed : Expected 3 parameters SGML form, found ' . ($#param_keys + 1);
     }
 
     my %form_keys_hash = map {$_ => $string_pairs->{$_} } @form_keys;
@@ -80,7 +81,7 @@ sub test_x_www {
     my @form_keys   = keys %$string_pairs;
     my @param_keys  = $cgi->param;
     if ($#form_keys != $#param_keys) {
-        return 'failed : Expected 3 parameters, found ' . ($#param_keys + 1);
+        return 'failed : Expected 3 parameters in x-www-form-urlencoded, found ' . ($#param_keys + 1);
     }
 
     my %form_keys_hash = map {$_ => $string_pairs->{$_} } @form_keys;
@@ -104,18 +105,25 @@ sub test_x_www {
 ######################################################
 
 sub test_multipart_form {
+    my ($mode) = @_;
+    $mode = '' unless (defined $mode);
     local $^W;
 
     my $basic_boundary = 'lkjsdlkjsd';
     my @boundaries_list = ();
-    for (my $count = 33; $count < 256; $count ++) {
-        push (@boundaries_list,chr($count) . $basic_boundary); 
+    my $boundary_test_code = {};
+    for (my $count = 0; $count < 128; $count ++) {
+        next if ((10 == $count) or (13 == $count));
+        my $test_boundary = chr($count) . $basic_boundary;
+        push (@boundaries_list,$test_boundary); 
+        $boundary_test_code->{$test_boundary} = $count;
     }
 
     foreach my $boundary (@boundaries_list) {
         my $data = multipart_data($boundary);
 
         $ENV{'CONTENT_LENGTH'}    = length($data);
+        if ($mode eq 'truncate') { $ENV{'CONTENT_LENGTH'}  = length($data) + 1; }
         $ENV{'CONTENT_TYPE'}      = "multipart/form-data; boundary=---------------------------$boundary";
         $ENV{'GATEWAY_INTERFACE'} = 'CGI/1.1'; 
         $ENV{'REQUEST_METHOD'}    = 'POST';
@@ -132,7 +140,12 @@ sub test_multipart_form {
         my $cgi = CGI::Minimal->new;
         close (STDIN);
         unlink $test_file;
-    
+   
+        if ($mode eq 'truncate') {
+            unless ($cgi->truncated) { return 'failed: did not detect truncated form'; }
+        } else {
+            if ($cgi->truncated) { return 'failed: form falsely appeared truncated'; }
+        }
         my $string_pairs = { 'hello' => 'testing',
                             'hello2' => 'testing2',
                      'submit button' => 'submit',
@@ -140,7 +153,11 @@ sub test_multipart_form {
         my @form_keys   = keys %$string_pairs;
         my @param_keys  = $cgi->param;
         if ($#form_keys != $#param_keys) {
-            return 'failed : Expected 3 parameters, found ' . ($#param_keys + 1) . " for boundary $boundary $data";
+            return 'failed : Expected 3 parameters in multipart form, found '
+                        . ($#param_keys + 1)
+                        . ". testing codepoint " . $boundary_test_code->{$boundary}
+                        . " "
+                        . " for boundary $boundary $data";
         }
     
         my %form_keys_hash = map {$_ => $string_pairs->{$_} } @form_keys;
@@ -159,6 +176,12 @@ sub test_multipart_form {
     # Success is an empty string (no error message ;) )
     return '';
 }
+
+######################################################
+# tests for detection of truncated forms             #
+######################################################
+
+sub test_truncation { test_multipart_form('truncate'); }
 
 ######################################################
 # multipart test data                                #

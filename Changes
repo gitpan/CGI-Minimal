@@ -1,3 +1,34 @@
+ 1.12 25 Sep 2004 - Tweaked the default form parser to accept ';' as a field seperator
+                    in addition to '&'. Change suggested by Peter Karman.
+                    Eliminated the explicit application/sgml-form-urlencoded support
+                    as redundant (it still works, it is just not explicitly different
+                    than application/x-www-form-urlencoded support anymore).
+
+                    Adjusted the multipart form parser to be more robust against
+                    malformed MIME boundaries and the build tests to work around a
+                    bug in Perl 5.8.0 UTF8ness and split.
+
+                    Added documentation of command line script testing behavior.
+
+                    Tightened up the code to reduce size (went from 14.9K to 11K).
+
+                    Removed the 'sgml_safe_mode' redirect code since there
+                    was no exposed interface to it anyway.
+
+                    Squashed a bug where the global buffer might fail to initialize
+                    correctly for 0 byte POST forms (only impacted  use of the 'raw'
+                    method for POST use).
+
+                    Added regression test for form truncation
+
+                    Added LICENSE section to documentation
+
+                    Added Module::Build installation support
+
+ 1.11 28 Sep 2003 - Tweaked test script to avoid warnings about
+                    opening STDIN filehandle for writing. No functional
+                    changes.
+
  1.10 04 Apr 2003 - Added 'binmode STDIN' on module load to correct for
                     windows defaulting to 7-bit filehandles. Fixed problem where
                     split would fail on unusual MIME boundary strings.
@@ -9,9 +40,9 @@
 
                     Removed big disclaimer from .pm and moved
                     in pod to 'DISCLAIMERS' section
-                    
+
                     Added tests
- 
+
  1.09 19 Mar 2002 - Exposed CGI::Minimal::reset_globals class method to support non-
                     mod_perl persistent execution environments.
 
@@ -25,11 +56,11 @@
                     multi-part forms. 'split' seems broken
                     according to the doc pages....
 
- 1.05 03 Apr 2000 - Fixed breakage in 'param;' from 1.04 changes 
+ 1.05 03 Apr 2000 - Fixed breakage in 'param;' from 1.04 changes
 
  1.04 03 Apr 2000 - Added capability to set params via the param() method
                     like 'CGI.pm' plus general code cleanup
- 
- 1.03 02 Mar 2000 - 'mod_perl' compatibility added 
+
+ 1.03 02 Mar 2000 - 'mod_perl' compatibility added
 
  1.02 09 Jun 1999 - Initial public release.

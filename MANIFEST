@@ -1,6 +1,8 @@
 Changes
 MANIFEST
+LICENSE
 Makefile.PL
+Build.PL
 README
 TODO
 lib/CGI/Minimal.pm
