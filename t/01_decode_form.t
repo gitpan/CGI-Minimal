@@ -113,7 +113,7 @@ sub test_multipart_form {
     my @boundaries_list = ();
     my $boundary_test_code = {};
     for (my $count = 0; $count < 128; $count ++) {
-        next if ((10 == $count) or (13 == $count));
+        next if ((10 == $count) or (13 == $count) or (26 == $count)); # Skip CR, LF and EOF (Ctrl-Z) characters for testing
         my $test_boundary = chr($count) . $basic_boundary;
         push (@boundaries_list,$test_boundary); 
         $boundary_test_code->{$test_boundary} = $count;
@@ -144,7 +144,7 @@ sub test_multipart_form {
         if ($mode eq 'truncate') {
             unless ($cgi->truncated) { return 'failed: did not detect truncated form'; }
         } else {
-            if ($cgi->truncated) { return 'failed: form falsely appeared truncated'; }
+            if ($cgi->truncated) { return "failed: form falsely appeared truncated for boundary char " . $boundary_test_code->{$boundary}; }
         }
         my $string_pairs = { 'hello' => 'testing',
                             'hello2' => 'testing2',

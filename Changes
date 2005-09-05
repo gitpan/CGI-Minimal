@@ -1,3 +1,8 @@
+ 1.17 04 Sep 2005 - More tweaks to regression tests to work around MS-Windows
+                    problems with binary file handles under Perl 5.6.1.
+                    Added 'Build.PL' support back in. Added POD tests.
+                    Minor documentation tweaks.
+
  1.16 12 Nov 2004 - Added CGI::Simple to the benchmarks table. Tweaked regresssion
                     tests for MS-Windows. Added 'delete' and 'delete_all'
                     methods and regression tests. Added ':preload' flag for

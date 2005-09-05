@@ -1,6 +1,9 @@
+Artistic_License.txt
 Changes
+GPL_License.txt
 MANIFEST
 LICENSE
+Build.PL
 Makefile.PL
 README
 TODO
@@ -12,4 +15,6 @@ t/01_decode_form.t
 t/02_encodings.t
 t/03_misc.t
 t/04_modify_parameters.t
+t/98_pod_coverage.t
+t/99_pod.t
 META.yml                                 Module meta-data (added by MakeMaker)

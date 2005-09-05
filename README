@@ -11,4 +11,11 @@ make
 make test
 make install
 
+Alternatively, if you have Module::Build installed,
+
+perl Build.PL
+./Build
+./Build test
+./Build install
+
 See 'perldoc CGI::Minimal' for the documentation.

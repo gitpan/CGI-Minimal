@@ -1,7 +1,7 @@
 
 =head1 NAME
 
-CGI::Minimal - A lightweight CGI form processing pacakge
+CGI::Minimal - A lightweight CGI form processing package
 
 =head1 SYNOPSIS
 
@@ -62,7 +62,7 @@ Example:
 =head2 Performance Hints
 
 If you are using this module as part of a conventional standalone CGI
-to get a speedup over using CGI.pm, don't 'use warnings;' or 'use vars'
+specifically to get a speedup over using CGI.pm, don't 'use warnings', 'use vars'
 or 'use Carp' in your final production code.
 
 The problem with 'use vars' or 'use warnings' is that (unless you are using
@@ -95,7 +95,7 @@ being used as a conventional CGI script - but B<NOT> when being used via mod_per
 When invoked via mod_perl, :preload is already implied.
 
 The ultimate performance hint, of course, is use mod_perl (or another persistent
-execution environment). While you can reach around 67 or so invokations per second on
+execution environment). While you can reach around 66 or so invokations per second on
 an AMD XP2100+ processor running a simple script using CGI::Minimal, you can exceed
 400 per second using mod_perl.
 
@@ -109,8 +109,8 @@ as if they had.
 
 Notably, mod_perl outperforms the compiled C program by
 quite a lot for this simple case. Note also that using the :preload
-option slowed the CGI::Minimal script down from 67 fetches/second 
-to only 53 fetches/second.
+option slowed the CGI::Minimal script down from 66 fetches/second 
+to only 52 fetches/second when used in standard CGI mode.
 
 With 10 parallel fetches repeated as fast as possible for 30 seconds
 with and without mod_perl (if supported) the tests gave the following
@@ -133,6 +133,12 @@ results (sorted by speed):
 
 =head1 CHANGES
 
+ 1.17 04 Sep 2005 - More tweaks to regression tests to work around MS-Windows
+                    problems with binary file handles under Perl 5.6.1.
+
+                    Added 'Build.PL' support back in. Added POD tests.
+                    Minor documentation tweaks. No functional changes.
+                    
  1.16 12 Nov 2004 - Added CGI::Simple to the benchmarks table. Tweaked regresssion
                     tests for MS-Windows. Added 'delete' and 'delete_all'
                     methods and regression tests. Added ':preload' flag for
@@ -563,7 +569,7 @@ None known.
 
 =head1 TODO
 
-Add more regression tests.
+Investigate ModPerl2 compatibility
 
 =head1 AUTHOR
 
@@ -571,7 +577,7 @@ Benjamin Franz <snowhare@nihongo.org>
 
 =head1 VERSION
 
-Version 1.16 13 Nov 2004
+Version 1.17 04 Sep 2005 
 
 =head1 COPYRIGHT
 

@@ -6,14 +6,15 @@ package CGI::Minimal;
 #
 # I don't 'use warnings;' here because it pulls in ~ 40Kbytes of code
 # I don't use vars qw ($_query $VERSION $form_initial_read $_BUFFER); or
-# use strict for the same reason.
+# use strict for the same reason. The code is clean - but the pragmas
+# cause performance issues.
 
 $CGI::Minimal::_query            = undef;
 $CGI::Minimal::form_initial_read = undef;
 $CGI::Minimal::_BUFFER           = undef;
 
 BEGIN {
-	$CGI::Minimal::VERSION = "1.16";
+	$CGI::Minimal::VERSION = "1.17";
     if (exists $ENV{'MOD_PERL'}) {
 	    $| = 1;
 	    require Apache;
