@@ -28,6 +28,23 @@ sub test_html_escaping {
     unless ($dehtmlized eq $source) {
         return "failed to correctly decode unsafe characters ($htmlized)";
     }
+
+    my $null_string = CGI::Minimal->dehtmlize;
+    unless (defined $null_string) {
+        return 'dehtmlize failed to upgrade an undefined value to an defined string';
+    }
+    unless ('' eq $null_string) {
+        return 'dehtmlize failed to upgrade an undefined value to an empty string';
+    }
+
+    $null_string = CGI::Minimal->htmlize;
+    unless (defined $null_string) {
+        return 'htmlize failed to upgrade an undefined value to an defined string';
+    }
+    unless ('' eq $null_string) {
+        return 'htmlize failed to upgrade an undefined value to an empty string';
+    }
+
     return '';
 }
 
@@ -80,6 +97,22 @@ sub test_url_encoding {
     }
     if (0 < @failed_encoding_code_points) {
         return "failed to handle decoding " . join(' ',@failed_decoding_code_points); 
+    }
+
+    my $null_string = CGI::Minimal->url_decode;
+    unless (defined $null_string) {
+        return 'url_decode failed to upgrade an undefined value to an defined string';
+    }
+    unless ('' eq $null_string) {
+        return 'url_decode failed to reify an undefined value as an empty string';
+    }
+
+    $null_string = CGI::Minimal->url_encode;
+    unless (defined $null_string) {
+        return 'url_encode failed to upgrade an undefined value to an defined string';
+    }
+    unless ('' eq $null_string) {
+        return 'url_encode failed to upgrade an undefined value to an empty string';
     }
 
     return '';

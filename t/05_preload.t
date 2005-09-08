@@ -2,18 +2,15 @@
 
 use strict;
 use lib ('./blib','./lib','../blib','../lib');
-use CGI::Minimal;
+use CGI::Minimal qw(:preload);
 
-my $do_tests = [1..7];
+my $do_tests = [1..4];
 
 my $test_subs = {
-     1 => { -code => \&test_x_www,            -desc => 'decode application/x-www-form-urlencoded   ' },
-     2 => { -code => \&test_sgml_form,        -desc => 'decode application/sgml-form-urlencoded    ' },
-     3 => { -code => \&test_repeated_params,  -desc => 'decode repeated parameter options          ' },
-     4 => { -code => \&test_raw_buffer,       -desc => 'raw buffer                                 ' },
-     5 => { -code => \&test_no_params,        -desc => 'no parameters                              ' },
-     6 => { -code => \&test_truncation,       -desc => 'detect form truncation                     ' },
-     7 => { -code => \&test_multipart_form,   -desc => 'decode multipart/form-data                 ' },
+     1 => { -code => \&test_x_www,          -desc => 'preload decode application/x-www-form-urlencoded   ' },
+     2 => { -code => \&test_sgml_form,      -desc => 'preload decode application/sgml-form-urlencoded    ' },
+     3 => { -code => \&test_multipart_form, -desc => 'preload decode multipart/form-data                 ' },
+     4 => { -code => \&test_truncation,     -desc => 'preload detect form truncation                     ' },
 };
 
 run_tests($test_subs,$do_tests);
@@ -22,126 +19,12 @@ exit;
 
 ###########################################################################################
 
-
-##############################################################
-# Test raw buffer handling                                   #
-##############################################################
-
-sub test_raw_buffer {
-
-    $ENV{'QUERY_STRING'}      = 'hello=first;hello=second;hello=third;hello=fourth';
-    $ENV{'CONTENT_LENGTH'}    = length($ENV{'QUERY_STRING'});
-    $ENV{'CONTENT_TYPE'}      = 'application/sgml-form-urlencoded';
-    $ENV{'GATEWAY_INTERFACE'} = 'CGI/1.1'; 
-    $ENV{'REQUEST_METHOD'}    = 'GET';
-
-    ############################
-    # raw buffer tests
-    {
-        CGI::Minimal::reset_globals;
-        my $raw_buffer = CGI::Minimal::raw();
-        if (defined $raw_buffer) {
-            return 'failed: reset globals failed to reset raw buffer';
-        }
-        my $cgi     = CGI::Minimal->new;
-        $raw_buffer = CGI::Minimal::raw();
-        unless (defined $raw_buffer) {
-            return 'failed: raw buffer was undefined when it should not have been'
-        }
-   
-    }
-    # Success is an empty string (no error message ;) )
-    return '';
-}
-
-##############################################################
-# Test decoding of forms with no parameters                  #
-##############################################################
-
-sub test_no_params {
-
-    ###########################
-    # no parameters
-    $ENV{'QUERY_STRING'}      = '';
-    $ENV{'CONTENT_LENGTH'}    = length($ENV{'QUERY_STRING'});
-    $ENV{'CONTENT_TYPE'}      = 'application/sgml-form-urlencoded';
-    $ENV{'GATEWAY_INTERFACE'} = 'CGI/1.1'; 
-    $ENV{'REQUEST_METHOD'}    = 'GET';
-
-    {
-        CGI::Minimal::reset_globals;
-
-        my $cgi = CGI::Minimal->new;
-
-        my @params = $cgi->param;
-        if (0 != @params) {
-            return 'failed: Unexpected param keys found: ' . join(',',@params);
-        }
-    }
-    # Success is an empty string (no error message ;) )
-    return '';
-}
-
-##############################################################
-# Test decoding of forms with multiple values for parameters #
-##############################################################
-
-sub test_repeated_params {
-
-    ###########################
-    # repeated parameter names
-    $ENV{'QUERY_STRING'}      = 'hello=first;hello=second;hello=third;hello=fourth';
-    $ENV{'CONTENT_LENGTH'}    = length($ENV{'QUERY_STRING'});
-    $ENV{'CONTENT_TYPE'}      = 'application/sgml-form-urlencoded';
-    $ENV{'GATEWAY_INTERFACE'} = 'CGI/1.1'; 
-    $ENV{'REQUEST_METHOD'}    = 'GET';
-
-    {
-        CGI::Minimal::reset_globals;
-        my $cgi = CGI::Minimal->new;
-    
-        my $string_pairs = { 'hello' => ['first', 'second', 'third', 'fourth'], };
-        my @form_keys   = keys %$string_pairs;
-        my @param_keys  = $cgi->param;
-        if ($#form_keys != $#param_keys) {
-            return 'failed : Expected 1 parameter name from SGML form, found ' . ($#param_keys + 1);
-        }
-    
-        my %form_keys_hash = map {$_ => $string_pairs->{$_} } @form_keys;
-        foreach my $key_item (@param_keys) {
-            if (! defined $form_keys_hash{$key_item}) {
-                return 'failed : Parameter names did not match';
-            }
-            my @item_values      = $cgi->param($key_item);
-            my $n_found_items    = $#item_values + 1;
-            my @expected_items   = @{$form_keys_hash{$key_item}};
-            my $n_expected_items = $#expected_items + 1;
-            if ($n_found_items != $n_expected_items) {
-                return 'failed: Expected $n_expected_items parameter values, found $n_found_items';
-            }
-    
-            for (my $count = 0; $count < $n_expected_items; $count++) {
-                unless ($item_values[$count] eq $expected_items[$count]) {
-                    return 'failed: Parameter lists mis-match (' . join(',',@item_values) . ') != (' . join(',',@expected_items) . ')';
-                }
-            }
-            my $first_element = $cgi->param($key_item);
-            unless ($first_element eq $expected_items[0]) {
-                return 'failed: multiple item param failed to return first element in scalar context';
-            }
-        }
-    }
-
-    # Success is an empty string (no error message ;) )
-    return '';
-}
-
 ######################################################
 # Test SGML form decoding                            #
 ######################################################
 
 sub test_sgml_form {
-    $ENV{'QUERY_STRING'}      = 'hello=testing;hello2=SGML+encoded+FORM;nullparm=;=nullkey;submit+button=submit';
+    $ENV{'QUERY_STRING'}      = 'hello=testing;hello2=SGML+encoded+FORM;submit+button=submit';
     $ENV{'CONTENT_LENGTH'}    = length($ENV{'QUERY_STRING'});
     $ENV{'CONTENT_TYPE'}      = 'application/sgml-form-urlencoded';
     $ENV{'GATEWAY_INTERFACE'} = 'CGI/1.1'; 
@@ -151,17 +34,14 @@ sub test_sgml_form {
 
     my $cgi = CGI::Minimal->new;
 
-    my $string_pairs = { 'hello'         => 'testing',
-                         'hello2'        => 'SGML encoded FORM',
-                         'nullparm'      => '',
-                         ''              => 'nullkey',
-                         'submit button' => 'submit',
+    my $string_pairs = { 'hello' => 'testing',
+                        'hello2' => 'SGML encoded FORM',
+                 'submit button' => 'submit',
     };
     my @form_keys   = keys %$string_pairs;
     my @param_keys  = $cgi->param;
     if ($#form_keys != $#param_keys) {
-        my $n_expected_parms = $#form_keys + 1;
-        return "failed : Expected $n_expected_parms parameters SGML form, found " . ($#param_keys + 1);
+        return 'failed : Expected 3 parameters SGML form, found ' . ($#param_keys + 1);
     }
 
     my %form_keys_hash = map {$_ => $string_pairs->{$_} } @form_keys;
@@ -173,11 +53,6 @@ sub test_sgml_form {
         if ($form_keys_hash{$key_item} ne $item_value) {
             return 'failed : Parameter values did not match';
         }
-    }
-    # Unused parameter
-    my $value = $cgi->param('no-such-parameter');
-    if (defined $value) {
-        return "failed: Got a value besides 'undef' for an undeclared parameter query";
     }
 
     # Success is an empty string (no error message ;) )
@@ -275,17 +150,6 @@ sub test_multipart_form {
                             'hello2' => 'testing2',
                      'submit button' => 'submit',
         };
-        my %mime_types = (
-                'hello'         => 'text/plain',
-                'hello2'        => 'text/html',
-                'submit button' => 'text/plain',
-        );
-        my %filenames = (
-                'hello'         => '',
-                'hello2'        => 'example',
-                'submit button' => '',
-        );
-
         my @form_keys   = keys %$string_pairs;
         my @param_keys  = $cgi->param;
         if ($#form_keys != $#param_keys) {
@@ -296,7 +160,7 @@ sub test_multipart_form {
                         . " for boundary $boundary $data";
         }
     
-        my %form_keys_hash  = map {$_ => $string_pairs->{$_} } @form_keys;
+        my %form_keys_hash = map {$_ => $string_pairs->{$_} } @form_keys;
         foreach my $key_item (@param_keys) {
             if (! defined $form_keys_hash{$key_item}) {
                 return 'failed : Parameter names did not match';
@@ -305,15 +169,8 @@ sub test_multipart_form {
             if ($form_keys_hash{$key_item} ne $item_value) {
                 return 'failed : Parameter values did not match';
             }
-            my $item_mime_type = $cgi->param_mime($key_item);
-            unless ($item_mime_type eq $mime_types{$key_item}) {
-                return 'failed : Parameter MIME types did not match';
-            }
-            my $item_filename = $cgi->param_filename($key_item);
-            unless ($item_filename eq $filenames{$key_item}) {
-                return 'failed : Parameter filenames did not match';
-            }
         }
+        
     }
 
     # Success is an empty string (no error message ;) )
@@ -339,8 +196,7 @@ Content-Disposition: form-data; name="hello"
 
 testing
 -----------------------------$boundary
-Content-Disposition: form-data; name="hello2"; filename="example
-Content-Type: text/html
+Content-Disposition: form-data; name="hello2"
 
 testing2
 -----------------------------$boundary

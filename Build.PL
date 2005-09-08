@@ -5,8 +5,7 @@ my $build = Module::Build->new
         dist_abstract  => 'A lightweight CGI form processing package',
         license        => 'perl',
         requires       => {
-            'Test::More'    => '0.54',
-            'Module::Build' => 0,
+            'Test::More'    => 0,
             },
         build_requires => { },
       )->create_build_script;

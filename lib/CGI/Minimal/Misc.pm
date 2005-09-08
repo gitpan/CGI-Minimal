@@ -1,15 +1,14 @@
 package CGI::Minimal;
 
+use strict;
+
 # This program is licensed under the same terms as Perl.
 # See http://dev.perl.org/licenses/
 # Copyright 1999-2004 Benjamin Franz. All Rights Reserved.
 
 # I don't 'use warnings;' here because it pulls in ~ 20Kbytes of code
 # I don't use vars qw ($_query $VERSION $form_initial_read $_BUFFER);
-# or (consequently) use strict for the same reason.
-
-#use strict;
-#use warnings;
+# for the same reason.
 
 ####
 

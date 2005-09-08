@@ -44,18 +44,45 @@ sub test_param_mod {
         return 'failed : Expected 3 parameters SGML form, found ' . ($#param_keys + 1);
     }
 
-    $string_pairs->{'hello'} = 'changed';
-    $cgi->param('hello' => 'changed');
-    my %form_keys_hash = map {$_ => $string_pairs->{$_} } @form_keys;
-    foreach my $key_item (@param_keys) {
-        if (! defined $form_keys_hash{$key_item}) {
-            return 'failed : Parameter names did not match';
-        }
-        my $item_value = $cgi->param($key_item);
-        if ($form_keys_hash{$key_item} ne $item_value) {
-            return 'failed : Parameter values did not match';
+    {
+        $string_pairs->{'hello'} = 'changed';
+        $cgi->param('hello' => 'changed');
+        my %form_keys_hash = map {$_ => $string_pairs->{$_} } @form_keys;
+        foreach my $key_item (@param_keys) {
+            if (! defined $form_keys_hash{$key_item}) {
+                return 'failed : Parameter names did not match';
+            }
+            my $item_value = $cgi->param($key_item);
+            if ($form_keys_hash{$key_item} ne $item_value) {
+                return 'failed : Parameter values did not match';
+            }
         }
     }
+
+    {
+        $string_pairs->{'hello'} = 'changed2';
+        $cgi->param({'hello' => 'changed2'});
+        my %form_keys_hash = map {$_ => $string_pairs->{$_} } @form_keys;
+        foreach my $key_item (@param_keys) {
+            if (! defined $form_keys_hash{$key_item}) {
+                return 'failed : Parameter names did not match after anon hash form change';
+            }
+            my $item_value = $cgi->param($key_item);
+            if ($form_keys_hash{$key_item} ne $item_value) {
+                return 'failed : Parameter values did not match';
+            }
+        }
+    }
+
+    # Bad parameter mods
+    eval {
+        $cgi->param('a','b','c'); # Three is a bad attempt to set
+    }; 
+    if (not $@) {
+        return 'failed: Attempt to mis-set parameters not caught';
+    } 
+    
+    
     # Success is an empty string (no error message ;) )
     return '';
 }

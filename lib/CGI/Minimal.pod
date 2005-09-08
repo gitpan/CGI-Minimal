@@ -6,7 +6,7 @@ CGI::Minimal - A lightweight CGI form processing package
 =head1 SYNOPSIS
 
  # use CGI::Minimal qw(:preload);
- use CGI::Minimal; 
+ use CGI::Minimal;
 
  my $cgi = CGI::Minimal->new;
  if ($cgi->truncated) {
@@ -87,10 +87,10 @@ your script unless you are using one or more of the following methods:
  dehtmlize       param_mime    param_filename
  date_rfc1123    url_decode    calling_parms_table
 
-or are using the 'param' method to 'set' values 
+or are using the 'param' method to 'set' values
 (ie. C<$cgi-E<gt>param({'fieldname' =E<gt> $field_value });>).
 
-If you B<are> using one of those methods, then it should provide a slight speedup when 
+If you B<are> using one of those methods, then it should provide a slight speedup when
 being used as a conventional CGI script - but B<NOT> when being used via mod_perl.
 When invoked via mod_perl, :preload is already implied.
 
@@ -109,7 +109,7 @@ as if they had.
 
 Notably, mod_perl outperforms the compiled C program by
 quite a lot for this simple case. Note also that using the :preload
-option slowed the CGI::Minimal script down from 66 fetches/second 
+option slowed the CGI::Minimal script down from 66 fetches/second
 to only 52 fetches/second when used in standard CGI mode.
 
 With 10 parallel fetches repeated as fast as possible for 30 seconds
@@ -133,12 +133,15 @@ results (sorted by speed):
 
 =head1 CHANGES
 
+ 1.18 08 Sep 2005 - Tweaked prerequisite modules lists. Extended regresssion
+                    tests to cover more of the code.
+
  1.17 04 Sep 2005 - More tweaks to regression tests to work around MS-Windows
                     problems with binary file handles under Perl 5.6.1.
 
                     Added 'Build.PL' support back in. Added POD tests.
                     Minor documentation tweaks. No functional changes.
-                    
+
  1.16 12 Nov 2004 - Added CGI::Simple to the benchmarks table. Tweaked regresssion
                     tests for MS-Windows. Added 'delete' and 'delete_all'
                     methods and regression tests. Added ':preload' flag for
@@ -577,7 +580,7 @@ Benjamin Franz <snowhare@nihongo.org>
 
 =head1 VERSION
 
-Version 1.17 04 Sep 2005 
+Version 1.18 08 Sep 2005
 
 =head1 COPYRIGHT
 

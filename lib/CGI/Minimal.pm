@@ -1,20 +1,21 @@
 package CGI::Minimal;
 
+use strict;
+
 # This program is licensed under the same terms as Perl.
 # See http://dev.perl.org/licenses/
 # Copyright 1999-2004 Benjamin Franz. All Rights Reserved.
 #
 # I don't 'use warnings;' here because it pulls in ~ 40Kbytes of code
-# I don't use vars qw ($_query $VERSION $form_initial_read $_BUFFER); or
-# use strict for the same reason. The code is clean - but the pragmas
-# cause performance issues.
+# I don't use vars qw ($_query $VERSION $form_initial_read $_BUFFER); for
+# same reason. The code is clean - but the pragmas cause performance issues.
 
 $CGI::Minimal::_query            = undef;
 $CGI::Minimal::form_initial_read = undef;
 $CGI::Minimal::_BUFFER           = undef;
 
 BEGIN {
-	$CGI::Minimal::VERSION = "1.17";
+	$CGI::Minimal::VERSION = "1.18";
     if (exists $ENV{'MOD_PERL'}) {
 	    $| = 1;
 	    require Apache;
@@ -24,7 +25,7 @@ BEGIN {
 }
 
 binmode STDIN;
-&reset_globals;
+reset_globals();
 
 ####
 
@@ -41,31 +42,31 @@ sub import {
 
 sub new {
 
-	if ($form_initial_read) {
+	if ($CGI::Minimal::form_initial_read) {
 		binmode STDIN;
-		$_query->_read_form;
-		$form_initial_read = 0;
+		$CGI::Minimal::_query->_read_form;
+		$CGI::Minimal::form_initial_read = 0;
 	}
 	if (exists $ENV{'MOD_PERL'}) {
 		Apache->request->register_cleanup(\&CGI::Minimal::reset_globals);
 	}
 
-	$_query;
+	return $CGI::Minimal::_query;
 }
 
 ####
 
 sub reset_globals {
-	$form_initial_read = 1;
-	$_query = {};
-	bless $_query;
+	$CGI::Minimal::form_initial_read = 1;
+	$CGI::Minimal::_query = {};
+	bless $CGI::Minimal::_query;
 	my $pkg = __PACKAGE__;
 
-	$_BUFFER = undef;
+	$CGI::Minimal::_BUFFER = undef;
 	max_read_size(1000000);
-	$_query->{$pkg}->{'field_names'} = [];
-	$_query->{$pkg}->{'field'} = {};
-	$_query->{$pkg}->{'form_truncated'} = undef;
+	$CGI::Minimal::_query->{$pkg}->{'field_names'} = [];
+	$CGI::Minimal::_query->{$pkg}->{'field'} = {};
+	$CGI::Minimal::_query->{$pkg}->{'form_truncated'} = undef;
 }
 
 # For backward compatibility 
@@ -76,8 +77,8 @@ sub _reset_globals { reset_globals; }
 sub delete_all { 
     my $self = shift;
     my $pkg  = __PACKAGE__;
-	$_query->{$pkg}->{'field_names'} = [];
-	$_query->{$pkg}->{'field'} = {};
+	$CGI::Minimal::_query->{$pkg}->{'field_names'} = [];
+	$CGI::Minimal::_query->{$pkg}->{'field'} = {};
     return;
 }
 
@@ -145,8 +146,8 @@ sub param {
 ####
 
 sub raw {
-	return if (! defined $_BUFFER);
-	return $$_BUFFER;
+	return if (! defined $CGI::Minimal::_BUFFER);
+	return $$CGI::Minimal::_BUFFER;
 }
 
 
@@ -161,7 +162,7 @@ sub truncated {
 
 sub max_read_size {
 	my $pkg = __PACKAGE__;
-	$_query->{$pkg}->{'max_buffer'} = $_[0];
+	$CGI::Minimal::_query->{$pkg}->{'max_buffer'} = $_[0];
 }
 
 ####
@@ -206,7 +207,7 @@ sub _read_post {
 	if ($read_length) {
 		$read_bytes = read(STDIN, $buffer, $read_length,0);
 	}
-	$_BUFFER = \$buffer;
+	$CGI::Minimal::_BUFFER = \$buffer;
 	$vars->{'form_truncated'} = ($read_bytes < $clen) ? 1 : 0;
 
 	my $content_type = defined($ENV{'CONTENT_TYPE'}) ? $ENV{'CONTENT_TYPE'} : '';
@@ -236,7 +237,7 @@ sub _read_get {
 	} else {
 		$buffer = $ENV{'QUERY_STRING'} if (defined $ENV{'QUERY_STRING'});
 	}
-	$_BUFFER = \$buffer;
+	$CGI::Minimal::_BUFFER = \$buffer;
 	$self->_burst_URL_encoded_buffer($buffer,'[;&]');
 }
 
@@ -314,8 +315,6 @@ sub date_rfc1123   { require CGI::Minimal::Misc; &_internal_date_rfc1123(@_);   
 sub dehtmlize      { require CGI::Minimal::Misc; &_internal_dehtmlize(@_);            }
 sub url_decode     { require CGI::Minimal::Misc; &_internal_url_decode(@_);           }
 sub calling_parms_table { require CGI::Minimal::Misc; &_internal_calling_parms_table(@_); }
-
-####
 
 ####
 

@@ -17,9 +17,22 @@ exit;
 
 ###########################################################################################
 
+sub reset_form {
+    $ENV{'QUERY_STRING'}      = 'hello=testing;hello2=SGML+encoded+FORM;submit+button=submit';
+    $ENV{'CONTENT_LENGTH'}    = length($ENV{'QUERY_STRING'});
+    $ENV{'CONTENT_TYPE'}      = 'application/sgml-form-urlencoded';
+    $ENV{'GATEWAY_INTERFACE'} = 'CGI/1.1';
+    $ENV{'REQUEST_METHOD'}    = 'GET';
+    CGI::Minimal::reset_globals;
+}
+
+###########################################################################################
+
 sub test_calling_parms_table {
     my $calling_parms_table = eval {
-        return CGI::Minimal->calling_parms_table;
+        reset_form();
+        my $cgi = CGI::Minimal->new;
+        return $cgi->calling_parms_table;
     };
     if ($@) {
         return "unexpected failure $@";
@@ -32,6 +45,7 @@ sub test_calling_parms_table {
 
 sub test_rfc1123_date {
     my $rfc_date = eval {
+        reset_form();
         return CGI::Minimal->date_rfc1123(0);
     };
     if ($@) {

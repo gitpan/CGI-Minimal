@@ -6,10 +6,8 @@ package CGI::Minimal;
 
 # I don't 'use warnings;' here because it pulls in ~ 20Kbytes of code
 # I don't use vars qw ($_query $VERSION $form_initial_read $_BUFFER);
-# or (consequently) use strict for the same reason.
 
-#use strict;
-#use warnings;
+use strict;
 
 ####
 
