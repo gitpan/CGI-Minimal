@@ -15,7 +15,7 @@ $CGI::Minimal::form_initial_read = undef;
 $CGI::Minimal::_BUFFER           = undef;
 
 BEGIN {
-	$CGI::Minimal::VERSION = "1.18";
+	$CGI::Minimal::VERSION = "1.19";
     if (exists $ENV{'MOD_PERL'}) {
 	    $| = 1;
 	    require Apache;

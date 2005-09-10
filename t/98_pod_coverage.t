@@ -13,7 +13,7 @@ if ( $@ ) {
 
 plan tests => 1;
 
-pod_coverage_ok( 'Tie::FileLRUCache',
+pod_coverage_ok( 'CGI::Minimal',
     {
         also_private => ['DEBUG']
     }

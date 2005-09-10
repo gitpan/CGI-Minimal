@@ -1,3 +1,5 @@
+ 1.19 10.Sep 2005 - Fixed POD Coverage test error.
+ 
  1.18 08.Sep 2005 - Adjusted prerequiste modules lists. Tweaked code for 'strict'.
                     Extended regression tests to cover more of the code.
  
