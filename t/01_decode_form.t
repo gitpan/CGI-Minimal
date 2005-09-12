@@ -4,16 +4,17 @@ use strict;
 use lib ('./blib','./lib','../blib','../lib');
 use CGI::Minimal;
 
-my $do_tests = [1..7];
+my $do_tests = [1..8];
 
 my $test_subs = {
      1 => { -code => \&test_x_www,            -desc => 'decode application/x-www-form-urlencoded   ' },
      2 => { -code => \&test_sgml_form,        -desc => 'decode application/sgml-form-urlencoded    ' },
-     3 => { -code => \&test_repeated_params,  -desc => 'decode repeated parameter options          ' },
-     4 => { -code => \&test_raw_buffer,       -desc => 'raw buffer                                 ' },
-     5 => { -code => \&test_no_params,        -desc => 'no parameters                              ' },
-     6 => { -code => \&test_truncation,       -desc => 'detect form truncation                     ' },
-     7 => { -code => \&test_multipart_form,   -desc => 'decode multipart/form-data                 ' },
+     3 => { -code => \&test_bad_form,         -desc => 'detect bad calls                           ' },
+     4 => { -code => \&test_repeated_params,  -desc => 'decode repeated parameter options          ' },
+     5 => { -code => \&test_raw_buffer,       -desc => 'raw buffer                                 ' },
+     6 => { -code => \&test_no_params,        -desc => 'no parameters                              ' },
+     7 => { -code => \&test_truncation,       -desc => 'detect form truncation                     ' },
+     8 => { -code => \&test_multipart_form,   -desc => 'decode multipart/form-data                 ' },
 };
 
 run_tests($test_subs,$do_tests);
@@ -185,6 +186,30 @@ sub test_sgml_form {
 }
 
 ######################################################
+# Test bad form decoding                             #
+######################################################
+
+sub test_bad_form {
+
+    $ENV{'QUERY_STRING'}      = 'hello=testing&hello2=standard+encoded+FORM&submit+button=submit';
+    $ENV{'CONTENT_LENGTH'}    = length($ENV{'QUERY_STRING'});
+    $ENV{'CONTENT_TYPE'}      = 'application/x-www-form-urlencoded';
+    $ENV{'GATEWAY_INTERFACE'} = 'CGI/1.1'; 
+    $ENV{'REQUEST_METHOD'}    = 'TRACE';
+
+    eval {
+        CGI::Minimal::reset_globals;
+        my $cgi = CGI::Minimal->new;
+    };
+    unless ($@) {
+        return 'failed: Failed to catch unsupported request method';
+    }
+
+    # Success is an empty string (no error message ;) )
+    return '';
+}
+
+######################################################
 # Test simple form decoding                          #
 ######################################################
 
@@ -281,38 +306,95 @@ sub test_multipart_form {
                 'submit button' => 'text/plain',
         );
         my %filenames = (
-                'hello'         => '',
+                'hello'         => 'hello1.txt',
                 'hello2'        => 'example',
                 'submit button' => '',
         );
 
-        my @form_keys   = keys %$string_pairs;
-        my @param_keys  = $cgi->param;
-        if ($#form_keys != $#param_keys) {
-            return 'failed : Expected 3 parameters in multipart form, found '
-                        . ($#param_keys + 1)
-                        . ". testing codepoint " . $boundary_test_code->{$boundary}
-                        . " "
-                        . " for boundary $boundary $data";
+        {
+            my @form_keys   = keys %$string_pairs;
+            my @param_keys  = $cgi->param;
+            if ($#form_keys != $#param_keys) {
+                return 'failed : Expected 3 parameters in multipart form, found '
+                            . ($#param_keys + 1)
+                            . ". testing codepoint " . $boundary_test_code->{$boundary}
+                            . " "
+                            . " for boundary $boundary $data";
+            }
+        
+            my %form_keys_hash  = map {$_ => $string_pairs->{$_} } @form_keys;
+            foreach my $key_item (@param_keys) {
+                if (! defined $form_keys_hash{$key_item}) {
+                    return 'failed : Parameter names did not match';
+                }
+                my $item_value = $cgi->param($key_item);
+                if ($form_keys_hash{$key_item} ne $item_value) {
+                    return 'failed : Parameter values did not match';
+                }
+                my $item_mime_type = $cgi->param_mime($key_item);
+                unless ($item_mime_type eq $mime_types{$key_item}) {
+                    return 'failed : Parameter MIME types did not match';
+                }
+                my $item_filename = $cgi->param_filename($key_item);
+                unless ($item_filename eq $filenames{$key_item}) {
+                    return 'failed : Parameter filenames did not match';
+                }
+            }
         }
-    
-        my %form_keys_hash  = map {$_ => $string_pairs->{$_} } @form_keys;
-        foreach my $key_item (@param_keys) {
-            if (! defined $form_keys_hash{$key_item}) {
-                return 'failed : Parameter names did not match';
+
+        {
+            my @form_keys   = keys %$string_pairs;
+            my @param_keys  = $cgi->param_mime;
+            if ($#form_keys != $#param_keys) {
+                return 'failed : Expected 3 parameters in mime params for multipart form, found '
+                            . ($#param_keys + 1)
+                            . ". testing codepoint " . $boundary_test_code->{$boundary}
+                            . " "
+                            . " for boundary $boundary $data";
             }
-            my $item_value = $cgi->param($key_item);
-            if ($form_keys_hash{$key_item} ne $item_value) {
-                return 'failed : Parameter values did not match';
+        
+            my %form_keys_hash  = map {$_ => $string_pairs->{$_} } @form_keys;
+            foreach my $key_item (@param_keys) {
+                if (! defined $form_keys_hash{$key_item}) {
+                    return 'failed : MIME Parameter names did not match';
+                }
             }
-            my $item_mime_type = $cgi->param_mime($key_item);
-            unless ($item_mime_type eq $mime_types{$key_item}) {
-                return 'failed : Parameter MIME types did not match';
+        }
+
+        {
+            my @form_keys   = keys %$string_pairs;
+            my @param_keys  = $cgi->param_filename;
+            if ($#form_keys != $#param_keys) {
+                return 'failed : Expected 3 parameters in filename params for multipart form, found '
+                            . ($#param_keys + 1)
+                            . ". testing codepoint " . $boundary_test_code->{$boundary}
+                            . " "
+                            . " for boundary $boundary $data";
             }
-            my $item_filename = $cgi->param_filename($key_item);
-            unless ($item_filename eq $filenames{$key_item}) {
-                return 'failed : Parameter filenames did not match';
+        
+            my %form_keys_hash  = map {$_ => $string_pairs->{$_} } @form_keys;
+            foreach my $key_item (@param_keys) {
+                if (! defined $form_keys_hash{$key_item}) {
+                    return 'failed : filename Parameter names did not match';
+                }
             }
+        }
+
+        my @multihello_mimes = $cgi->param_mime('hello');
+        if (1 != $#multihello_mimes) {
+            return 'failed: unexpected number of parameter MIME types for repeated values';
+        }
+        my @multihello2_mimes = $cgi->param_mime('hello2');
+        if (0 != $#multihello2_mimes) {
+            return 'failed: unexpected number of parameter MIME types for single value';
+        }
+        my @multihello_filenames = $cgi->param_filename('hello');
+        if (1 != $#multihello_filenames) {
+            return 'failed: unexpected number of parameter filenames for repeated values';
+        }
+        my @multihello2_filenames = $cgi->param_filename('hello2');
+        if (0 != $#multihello2_filenames) {
+            return 'failed: unexpected number of parameter filenames for single value';
         }
     }
 
@@ -335,11 +417,16 @@ sub multipart_data {
     
     my $data =<<"EOD";
 -----------------------------$boundary
-Content-Disposition: form-data; name="hello"
+Content-Disposition: form-data; name="hello"; filename="hello1.txt"
 
 testing
 -----------------------------$boundary
-Content-Disposition: form-data; name="hello2"; filename="example
+Content-Disposition: form-data; name="hello"; filename="hello1.xml"
+Content-Type: application/xml 
+
+<data>also testing</data>
+-----------------------------$boundary
+Content-Disposition: form-data; name="hello2"; filename="example"
 Content-Type: text/html
 
 testing2

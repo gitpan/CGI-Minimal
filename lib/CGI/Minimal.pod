@@ -133,6 +133,10 @@ results (sorted by speed):
 
 =head1 CHANGES
 
+ 1.20 11 Sep 2005 - Fixed issue that caused mod_perl to issue
+                    'Use of uninitialized value.' warnings.
+                    Extended build tests.
+
  1.19 10 Sep 2005 - Fixed POD Coverage build test error.
 
  1.18 08 Sep 2005 - Tweaked prerequisite modules lists. Extended regresssion
@@ -582,7 +586,7 @@ Benjamin Franz <snowhare@nihongo.org>
 
 =head1 VERSION
 
-Version 1.19 10 Sep 2005
+Version 1.20 11 Sep 2005
 
 =head1 COPYRIGHT
 

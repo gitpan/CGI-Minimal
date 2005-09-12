@@ -2,10 +2,6 @@ package CGI::Minimal;
 
 use strict;
 
-# This program is licensed under the same terms as Perl.
-# See http://dev.perl.org/licenses/
-# Copyright 1999-2004 Benjamin Franz. All Rights Reserved.
-#
 # I don't 'use warnings;' here because it pulls in ~ 40Kbytes of code
 # I don't use vars qw ($_query $VERSION $form_initial_read $_BUFFER); for
 # same reason. The code is clean - but the pragmas cause performance issues.
@@ -15,13 +11,13 @@ $CGI::Minimal::form_initial_read = undef;
 $CGI::Minimal::_BUFFER           = undef;
 
 BEGIN {
-	$CGI::Minimal::VERSION = "1.19";
-    if (exists $ENV{'MOD_PERL'}) {
-	    $| = 1;
-	    require Apache;
-	    require CGI::Minimal::Misc;
-	    require CGI::Minimal::Multipart;
-    }
+	$CGI::Minimal::VERSION = "1.20";
+	if (exists $ENV{'MOD_PERL'}) {
+		$| = 1;
+		require Apache;
+		require CGI::Minimal::Misc;
+		require CGI::Minimal::Multipart;
+	}
 }
 
 binmode STDIN;
@@ -67,6 +63,8 @@ sub reset_globals {
 	$CGI::Minimal::_query->{$pkg}->{'field_names'} = [];
 	$CGI::Minimal::_query->{$pkg}->{'field'} = {};
 	$CGI::Minimal::_query->{$pkg}->{'form_truncated'} = undef;
+
+	return 1; # Keeps mod_perl from complaining
 }
 
 # For backward compatibility 
@@ -75,11 +73,11 @@ sub _reset_globals { reset_globals; }
 ###
 
 sub delete_all { 
-    my $self = shift;
-    my $pkg  = __PACKAGE__;
+	my $self = shift;
+	my $pkg  = __PACKAGE__;
 	$CGI::Minimal::_query->{$pkg}->{'field_names'} = [];
 	$CGI::Minimal::_query->{$pkg}->{'field'} = {};
-    return;
+	return;
 }
 
 ####
@@ -90,7 +88,7 @@ sub delete {
 	my $vars = $self->{$pkg};
 	
 	my @names_list   = @_;
-	my %tagged_names = map { $_ => 1 } @names_list;    
+	my %tagged_names = map { $_ => 1 } @names_list;
 	my @parm_names   = @{$vars->{'field_names'}};
 	my $fields       = [];
 	my $data         = $vars->{'field'};
@@ -115,29 +113,35 @@ sub param {
 		my $n_parms = @_;
 		if (($n_parms % 2) == 1) {
 			require Carp;
-			Carp::croak("${pkg}::param() - Odd number of parameters (other than 1) passed");
+			Carp::confess("${pkg}::param() - Odd number of parameters (other than 1) passed");
 		}
+
 		my $parms = { @_ };
 		require CGI::Minimal::Misc;
 		$self->_internal_set($parms);
 		return;
 
-	} elsif ((@_ == 1) and (ref ($_[0]) eq 'HASH')) {
+	} elsif ((1 == @_) and (ref ($_[0]) eq 'HASH')) {
 		my $parms = shift;
 		require CGI::Minimal::Misc;
 		$self->_internal_set($parms);
 		return;
 	}
+
+	# Requesting parameter values
+
 	my $vars = $self->{$pkg};
 	my @result = ();
 	if ($#_ == -1) {
 		@result = @{$vars->{'field_names'}};
+
 	} elsif ($#_ == 0) {
 		my ($fname)=@_;
 		if (defined($vars->{'field'}->{$fname})) {
 			@result = @{$vars->{'field'}->{$fname}->{'value'}};
 		}
 	}
+
 	if    (wantarray)     { return @result;    }
 	elsif ($#result > -1) { return $result[0]; }
 	return;
@@ -185,6 +189,10 @@ sub _read_form {
 		$self->_read_post;
 	} elsif (($req_method eq 'GET') || ($req_method eq 'HEAD')) {
 		$self->_read_get;
+	} else {
+		my $package = __PACKAGE__;
+		require Carp;
+		Carp::croak($package . " - Unsupported HTTP request method");
 	}
 }
 
@@ -226,7 +234,7 @@ sub _read_post {
 }
 
 ####
-# Performs reading for GET and HEAD methods
+# GET and HEAD
 
 sub _read_get {
 	my $self = shift;
@@ -242,8 +250,8 @@ sub _read_get {
 }
 
 ####
-# Bursts normal URL encoded buffers
-#: $buffer -  data to be burst
+# Bursts URL encoded buffers
+#  $buffer -  data to be burst
 #  $spliton   - split pattern
 
 sub _burst_URL_encoded_buffer {

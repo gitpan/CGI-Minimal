@@ -113,16 +113,8 @@ sub _internal_dehtmlize {
 sub _internal_set {
 	my $pkg = __PACKAGE__;
 	my $vars = shift->{$pkg};
-
-	my $parms = {};
-	if (1 < @_) {
-		$parms = { @_ };
-	} elsif ((1 == @_) and (ref($_[0]) eq 'HASH')) {
-		($parms) = @_;
-	} else {
-		require Carp;
-		Carp::croak ("${pkg}::_set() - Invalid or no parameters passed");
-	}
+    
+	my ($parms) =  @_;
 	foreach my $name (keys %$parms) {
 		my $value = $parms->{$name};
 		my $data  = [];
@@ -135,7 +127,7 @@ sub _internal_set {
 
 		} else {
 			require Carp;
-			Carp::croak ("${pkg}::_set() - Parameter '$name' has illegal data type of '$data_type'");
+			Carp::croak ("${pkg}::_internal_set() - Parameter '$name' has illegal data type of '$data_type'");
 		}
 
 		if (! defined ($vars->{'field'}->{$name}->{'count'})) {

@@ -1,6 +1,6 @@
 ---
 name: CGI-Minimal
-version: 1.19
+version: 1.20
 author:
   - Benjamin Franz <snowhare@nihongo.org>
 abstract: A lightweight CGI form processing package
@@ -10,5 +10,5 @@ requires:
 provides:
   CGI::Minimal:
     file: lib/CGI/Minimal.pm
-    version: 1.19
+    version: 1.20
 generated_by: Module::Build version 0.261

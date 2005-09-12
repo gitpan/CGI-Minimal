@@ -74,12 +74,28 @@ sub test_param_mod {
         }
     }
 
+    # Multivalue parameters 
+    eval {
+        $cgi->param('a' => ['b','c']);
+    }; 
+    if ($@) {
+        return 'failed: Attempt to set multivalue parameters failed';
+    } 
+    
     # Bad parameter mods
     eval {
-        $cgi->param('a','b','c'); # Three is a bad attempt to set
+        $cgi->param('a','b','c'); # Odd number of parameters is bad 
     }; 
     if (not $@) {
         return 'failed: Attempt to mis-set parameters not caught';
+    } 
+    
+    # Bad parameter types
+    eval {
+        $cgi->param('a' => { 'a' => 'b' }); # only arrays and scalars allowed
+    }; 
+    if (not $@) {
+        return 'failed: Attempt to set parameters with bad value not caught';
     } 
     
     
