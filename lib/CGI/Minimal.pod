@@ -133,6 +133,9 @@ results (sorted by speed):
 
 =head1 CHANGES
 
+ 1.21 11 Sep 2005 - Fixed pod coverage build test for compatibility
+                    with Perl 5.005.
+
  1.20 11 Sep 2005 - Fixed issue that caused mod_perl to issue
                     'Use of uninitialized value.' warnings.
                     Extended build tests.
@@ -586,11 +589,11 @@ Benjamin Franz <snowhare@nihongo.org>
 
 =head1 VERSION
 
-Version 1.20 11 Sep 2005
+Version 1.21 11 Sep 2005
 
 =head1 COPYRIGHT
 
-Copyright (c) Benjamin Franz 1999-2004. All rights reserved.
+Copyright (c) Benjamin Franz 1999-2005. All rights reserved.
 
 =head1 LICENSE
 
