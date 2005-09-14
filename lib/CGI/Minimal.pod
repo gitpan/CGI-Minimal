@@ -133,6 +133,8 @@ results (sorted by speed):
 
 =head1 CHANGES
 
+ 1.22 13 Sep 2005 - Changed POD tests to be more friendly to CPANTS.
+
  1.21 11 Sep 2005 - Fixed pod coverage build test for compatibility
                     with Perl 5.005.
 
@@ -589,7 +591,7 @@ Benjamin Franz <snowhare@nihongo.org>
 
 =head1 VERSION
 
-Version 1.21 11 Sep 2005
+Version 1.22 13 Sep 2005
 
 =head1 COPYRIGHT
 
