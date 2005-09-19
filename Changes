@@ -1,3 +1,5 @@
+ 1.23 18.Sep 2005 - Made Test::More optional in build tests. No functional changes.
+
  1.22 13.Sep 2005 - Changed POD tests to be more friendly to CPANTS.
 
  1.21 11.Sep 2005 - Fixed pod coverage test for compatibility with Perl 5.005.

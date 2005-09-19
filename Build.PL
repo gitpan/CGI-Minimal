@@ -4,8 +4,6 @@ my $build = Module::Build->new
         dist_author    => 'Benjamin Franz <snowhare@nihongo.org>',
         dist_abstract  => 'A lightweight CGI form processing package',
         license        => 'perl',
-        requires       => {
-            'Test::More'    => 0,
-            },
+        requires       => { },
         build_requires => { },
       )->create_build_script;
