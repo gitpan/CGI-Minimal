@@ -87,7 +87,7 @@ sub test_url_encoding {
     my @failed_decoding_code_points = ();
     for (my $counter = 0; $counter < 256; $counter++) {
         my $encoded_char = $encoding_table[$counter];
-        my $decoded_char = CGI::Minimal->url_decode;
+        my $decoded_char = CGI::Minimal->url_decode($encoded_char);
         unless (chr($counter) eq $decoded_char) {
             push (@failed_decoding_code_points, $encoded_char);
         }

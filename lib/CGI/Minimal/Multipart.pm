@@ -13,7 +13,7 @@ use strict;
 
 sub _internal_param_mime {
 	my $pkg = __PACKAGE__;
-    my $vars = shift->{$pkg};
+	my $vars = shift->{$pkg};
 
 	my @result = ();
 	if ($#_ == -1) {
@@ -23,6 +23,9 @@ sub _internal_param_mime {
 		if (defined($vars->{'field'}->{$fname})) {
 			@result = @{$vars->{'field'}->{$fname}->{'mime_type'}};
 		}
+	} else {
+		require Carp;
+		Carp::confess($pkg . "::param_mime() - incorrect number of calling parameters (either 1 or no parameters expected)");
 	}
 	if (wantarray) {
 		return @result;
@@ -47,10 +50,16 @@ sub _internal_param_filename {
 		if (defined($vars->{'field'}->{$fname})) {
 			@result = @{$vars->{'field'}->{$fname}->{'filename'}};
 		}
+	} else {
+		require Carp;
+		Carp::confess($pkg . "::param_filename() - incorrect number of calling parameters (either 1 or no parameters expected)");
 	}
-	if (wantarray) { return @result; }
-	elsif ($#result > -1) { return $result[0]; }
-	else { return; }
+
+	if (wantarray) {
+		return @result;
+	} elsif ($#result > -1) {
+		return $result[0];
+	} else { return; }
 }
 
 ####
@@ -69,7 +78,7 @@ sub _burst_multipart_buffer {
 		$nbdry =~ s/([^A-Za-z0-9',-.\/:=])/ord($1)/egs;
 		my $quoted_boundary = quotemeta ($nbdry);
 		while ($buffer =~ m/$quoted_boundary/s) {
-			$nbdry = $self->url_encode($nbdry);
+			$nbdry .= chr(int(rand(25))+65);
 			$quoted_boundary = quotemeta ($nbdry);
 		}
 		my $old_boundary = quotemeta($bdry);

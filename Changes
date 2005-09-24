@@ -1,3 +1,9 @@
+
+ 1.24 23 Sep 2005 - Added 'Carp' to install requirements. Extended build tests.
+                    Fixed multi-part form decoding bug in handling of degenerate MIME
+                    boundaries. Added fatal errors for mis-calling of param_mime
+                    and param_filename methods.
+
  1.23 18.Sep 2005 - Made Test::More optional in build tests. No functional changes.
 
  1.22 13.Sep 2005 - Changed POD tests to be more friendly to CPANTS.

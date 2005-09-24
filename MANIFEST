@@ -17,6 +17,8 @@ t/03_misc.t
 t/04_modify_parameters.t
 t/05_preload.t
 t/06_mod_perl1.t
+t/07_commandline.t
+t/97_distribution.t
 t/98_pod_coverage.t
 t/99_pod.t
 META.yml

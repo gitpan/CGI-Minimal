@@ -11,7 +11,7 @@ $CGI::Minimal::form_initial_read = undef;
 $CGI::Minimal::_BUFFER           = undef;
 
 BEGIN {
-	$CGI::Minimal::VERSION = "1.23";
+	$CGI::Minimal::VERSION = "1.24";
 	if (exists $ENV{'MOD_PERL'}) {
 		$| = 1;
 		require Apache;
@@ -135,8 +135,8 @@ sub param {
 	if ($#_ == -1) {
 		@result = @{$vars->{'field_names'}};
 
-	} elsif ($#_ == 0) {
-		my ($fname)=@_;
+	} else {
+		my ($fname) = @_;
 		if (defined($vars->{'field'}->{$fname})) {
 			@result = @{$vars->{'field'}->{$fname}->{'value'}};
 		}
@@ -153,7 +153,6 @@ sub raw {
 	return if (! defined $CGI::Minimal::_BUFFER);
 	return $$CGI::Minimal::_BUFFER;
 }
-
 
 ####
 

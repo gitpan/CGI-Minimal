@@ -2,14 +2,6 @@ package CGI::Minimal;
 
 use strict;
 
-# This program is licensed under the same terms as Perl.
-# See http://dev.perl.org/licenses/
-# Copyright 1999-2004 Benjamin Franz. All Rights Reserved.
-
-# I don't 'use warnings;' here because it pulls in ~ 20Kbytes of code
-# I don't use vars qw ($_query $VERSION $form_initial_read $_BUFFER);
-# for the same reason.
-
 ####
 
 sub _internal_calling_parms_table {
@@ -22,19 +14,17 @@ sub _internal_calling_parms_table {
 <tr> <th colspan="4">Form Fields</th> </tr>
 <tr> <th>Field</th> <th>Value</th> <th>mime Type</th> <th>File Name</th> </tr>
 EOF
-    if (exists $vars->{'field_names'}) {
-		foreach my $fname (sort @{$vars->{'field_names'}}) {
-			my $f_data = $vars->{'field'}->{$fname};
-			my ($fmime,$ffile,$fvalue);
-			my ($sub_field_counter)= $#{$f_data->{'value'}};
-			for (my $fn=0;$fn <= $sub_field_counter;$fn++) {
-				$fmime  = $f_data->{'mime_type'}->[$fn];
-				$ffile  = $f_data->{'filename'}->[$fn];
-				$fvalue = '[non-text value]';
-				if ($fmime =~ m#^text/#oi) {
-					$fvalue = $self->htmlize($f_data->{'value'}->[$fn]);
-				}
-			$outs .= <<"EOF";
+	foreach my $fname (sort @{$vars->{'field_names'}}) {
+		my $f_data = $vars->{'field'}->{$fname};
+		my $sub_field_counter = $#{$f_data->{'value'}};
+		for (my $fn=0;$fn <= $sub_field_counter;$fn++) {
+			my $fmime  = $f_data->{'mime_type'}->[$fn];
+			my $ffile  = $f_data->{'filename'}->[$fn];
+			my $fvalue = '[non-text value]';
+			if ($fmime =~ m#^text/#oi) {
+				$fvalue = $self->htmlize($f_data->{'value'}->[$fn]);
+			}
+		$outs .= <<"EOF";
 	<tr>
 	 <td>$fname (#$fn)</td>
 	 <td> $fvalue </td>
@@ -42,8 +32,7 @@ EOF
 	 <td>$ffile</td>
 	</tr>
 EOF
-			}
-        }
+		}
 	}
 	$outs .= <<"EOF";
 <tr>
@@ -63,10 +52,8 @@ EOF
 
 	$outs .= "</table>\n";
 
-	$outs;
+	return $outs;
 }
-
-####
 
 ####
 
@@ -78,7 +65,7 @@ sub _internal_date_rfc1123 {
 	my $month = ('Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec')[$mon];
 	$year += 1900;
 	my $date = sprintf('%s, %02d %s %s %02d:%02d:%02d GMT',$wkday,$mday,$month,$year,$hour,$min,$sec);
-	$date;
+	return $date;
 }
 
 ####
@@ -90,7 +77,7 @@ sub _internal_url_decode {
 	return '' if (! defined($s));
 	$s =~ s/\+/ /gs;
 	$s =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/egs;
-	$s;
+	return $s;
 }
 
 ####
@@ -107,13 +94,13 @@ sub _internal_dehtmlize {
 	$s=~s/\&quot;/\"/gs;
 	$s=~s/\&amp;/\&/gs;
 
-	$s;
+	return $s;
 }
 
 sub _internal_set {
 	my $pkg = __PACKAGE__;
 	my $vars = shift->{$pkg};
-    
+
 	my ($parms) =  @_;
 	foreach my $name (keys %$parms) {
 		my $value = $parms->{$name};

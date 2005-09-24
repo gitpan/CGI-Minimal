@@ -1,12 +1,14 @@
 ---
 name: CGI-Minimal
-version: 1.23
+version: 1.24
 author:
   - Benjamin Franz <snowhare@nihongo.org>
 abstract: A lightweight CGI form processing package
 license: perl
+requires:
+  Carp: 0
 provides:
   CGI::Minimal:
     file: lib/CGI/Minimal.pm
-    version: 1.23
+    version: 1.24
 generated_by: Module::Build version 0.261

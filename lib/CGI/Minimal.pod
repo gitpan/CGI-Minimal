@@ -13,17 +13,17 @@ CGI::Minimal - A lightweight CGI form processing package
     &scream_about_bad_form;
     exit;
  }
- my ($form_field_value) = $cgi->param('some_field_name');
+ my $form_field_value = $cgi->param('some_field_name');
 
 =head1 DESCRIPTION
 
-Provides a micro-weight alternative to the CPAN CGI.pm module
+Provides a micro-weight alternative to the CGI.pm module
 
 Rather than attempt to address every possible need of a CGI
 programmer, it provides the _minimum_ functions needed for CGI such
 as form decoding (including file upload forms), URL encoding
 and decoding, HTTP usable date generation (RFC1123 compliant
-dates) and _basic_ escaping and unescaping of HTMLized text.
+dates) and I<basic> escaping and unescaping of HTMLized text.
 
 The ':preload' use time option is used to force all sub-component
 modules to load at compile time.  It is not required for
@@ -66,9 +66,8 @@ specifically to get a speedup over using CGI.pm, don't 'use warnings', 'use vars
 or 'use Carp' in your final production code.
 
 The problem with 'use vars' or 'use warnings' is that (unless you are using
-Perl 5.8.6 or later, which was not yet out as of this writing) they add on
-the order of 40 kilobytes of code to your load and you B<will> feel the
-slowdown. Half of that is from the Carp module (which
+Perl 5.8.6 or later) they add on the order of 40 kilobytes of code to your
+load and you B<will> feel the slowdown. Half of that is from the Carp module (which
 is used by both the 'vars' and 'warnings' modules.)
 
 So a well written script tuned for performance will start like this:
@@ -132,6 +131,11 @@ results (sorted by speed):
   null Perl script              via mod_perl     - 500 fetches per second
 
 =head1 CHANGES
+
+ 1.24 23 Sep 2005 - Added 'Carp' to install requirements. Extended build tests.
+                    Fixed multi-part form decoding bug in handling of degenerate MIME
+                    boundaries. Added fatal errors for mis-calling of param_mime
+                    and param_filename methods.
 
  1.23 18 Sep 2005 - Made Test::More optional in build tests. No functional changes.
 
@@ -593,7 +597,7 @@ Benjamin Franz <snowhare@nihongo.org>
 
 =head1 VERSION
 
-Version 1.23 18 Sep 2005
+Version 1.24 23 Sep 2005
 
 =head1 COPYRIGHT
 

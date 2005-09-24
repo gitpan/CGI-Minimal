@@ -31,6 +31,18 @@ sub reset_form {
 sub test_calling_parms_table {
     my $calling_parms_table = eval {
         reset_form();
+        $ENV{'QUERY_STRING'} = '';
+        $ENV{'CONTENT_LENGTH'}    = length($ENV{'QUERY_STRING'});
+        my $cgi = CGI::Minimal->new;
+        return $cgi->calling_parms_table;
+    };
+    if ($@) {
+        return "unexpected failure $@";
+    }
+    if ($calling_parms_table eq '') { return 'failed to generate calling parms table with no parms for decoding'; };
+
+    $calling_parms_table = eval {
+        reset_form();
         my $cgi = CGI::Minimal->new;
         return $cgi->calling_parms_table;
     };
@@ -38,6 +50,17 @@ sub test_calling_parms_table {
         return "unexpected failure $@";
     }
     if ($calling_parms_table eq '') { return 'failed to generate calling parms table'; };
+    
+    $calling_parms_table = eval {
+        reset_form();
+        my $cgi = generate_and_read_multipart_form();;
+        return $cgi->calling_parms_table;
+    };
+    if ($@) {
+        return "unexpected failure $@";
+    }
+    if ($calling_parms_table eq '') { return 'failed to generate calling parms table for multipart form'; };
+
     return '';
 }
 
@@ -55,6 +78,68 @@ sub test_rfc1123_date {
         return "Generated unexpected date of $rfc_date for epoch date '0'";
     }
     return '';
+}
+
+###########################################################################################
+
+sub generate_and_read_multipart_form {
+    local $^W;
+
+    my $basic_boundary = 'lkjsdlkjsd';
+
+    my $data = multipart_data($basic_boundary);
+
+    $ENV{'CONTENT_LENGTH'}    = length($data);
+    $ENV{'CONTENT_TYPE'}      = "multipart/form-data; boundary=---------------------------$basic_boundary";
+    $ENV{'GATEWAY_INTERFACE'} = 'CGI/1.1'; 
+    $ENV{'REQUEST_METHOD'}    = 'POST';
+
+    my $test_file = "test-data.$$.data";
+    open (TESTFILE,">$test_file") || return ("failed : could not open test file $test_file for writing: $!");
+    binmode (TESTFILE);
+    print TESTFILE $data;
+    close (TESTFILE);
+  
+    # "Bad evil naughty Zoot"
+    CGI::Minimal::reset_globals;
+    open (STDIN,$test_file) || return ("failed : could not open test file $test_file for reading: $!");
+    my $cgi = CGI::Minimal->new;
+    close (STDIN);
+    unlink $test_file;
+   
+    return $cgi;
+}
+
+######################################################
+# multipart test data                                #
+######################################################
+
+sub multipart_data {
+    my ($boundary) = @_;
+    
+    my $data =<<"EOD";
+-----------------------------$boundary
+Content-Disposition: form-data; name="hello"; filename="hello1.txt"
+
+testing
+-----------------------------$boundary
+Content-Disposition: form-data; name="hello"; filename="hello1.xml"
+Content-Type: application/xml 
+
+<data>also testing</data>
+-----------------------------$boundary
+Content-Disposition: form-data; name="hello2"; filename="example"
+Content-Type: text/html
+
+testing2
+-----------------------------$boundary
+Content-Disposition: form-data; name="submit button"
+
+submit
+-----------------------------$boundary--
+EOD
+    $data =~ s/\012/\015\012/gs;
+    return $data;
 }
 
 ###########################################################################################

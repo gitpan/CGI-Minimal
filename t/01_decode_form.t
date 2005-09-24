@@ -4,7 +4,7 @@ use strict;
 use lib ('./blib','./lib','../blib','../lib');
 use CGI::Minimal;
 
-my $do_tests = [1..8];
+my $do_tests = [1..9];
 
 my $test_subs = {
      1 => { -code => \&test_x_www,            -desc => 'decode application/x-www-form-urlencoded   ' },
@@ -15,6 +15,7 @@ my $test_subs = {
      6 => { -code => \&test_no_params,        -desc => 'no parameters                              ' },
      7 => { -code => \&test_truncation,       -desc => 'detect form truncation                     ' },
      8 => { -code => \&test_multipart_form,   -desc => 'decode multipart/form-data                 ' },
+     9 => { -code => \&test_post_form,        -desc => 'decode ordinary POST form data             ' },
 };
 
 run_tests($test_subs,$do_tests);
@@ -214,39 +215,131 @@ sub test_bad_form {
 ######################################################
 
 sub test_x_www {
-    $ENV{'QUERY_STRING'}      = 'hello=testing&hello2=standard+encoded+FORM&submit+button=submit';
+    $ENV{'QUERY_STRING'}      = 'hello=testing&hello2=standard%20encoded+FORM&hello%31=1&hello3=&&=test&submit+button=submit';
     $ENV{'CONTENT_LENGTH'}    = length($ENV{'QUERY_STRING'});
-    $ENV{'CONTENT_TYPE'}      = 'application/x-www-form-urlencoded';
     $ENV{'GATEWAY_INTERFACE'} = 'CGI/1.1'; 
-    $ENV{'REQUEST_METHOD'}    = 'GET';
+    $ENV{'CONTENT_TYPE'}      = 'application/x-www-form-urlencoded';
 
-    CGI::Minimal::reset_globals;
+    foreach my $request_method ('GET','HEAD') {
+	    $ENV{'REQUEST_METHOD'} = $request_method;
+	
+	    CGI::Minimal::reset_globals;
+	
+	    my $cgi = CGI::Minimal->new;
+	
+	    my $string_pairs = { 'hello' => 'testing',
+	                        'hello2' => 'standard encoded FORM',
+	                        'hello3' => '',
+                            'hello1' => '1',
+                            ''       => 'test',
+                            ''       => '',
+	                 'submit button' => 'submit',
+	    };
+	    my @form_keys   = keys %$string_pairs;
+        my $expected_keys = $#form_keys + 1;
+	    my @param_keys  = $cgi->param;
+	    if ($#form_keys != $#param_keys) {
+	        return "failed : Expected $expected_keys parameters in x-www-form-urlencoded, found " . ($#param_keys + 1);
+	    }
+	
+	    my %form_keys_hash = map {$_ => $string_pairs->{$_} } @form_keys;
+	    foreach my $key_item (@param_keys) {
+	        if (! defined $form_keys_hash{$key_item}) {
+	            return 'failed : Parameter names did not match';
+	        }
+	        my $item_value = $cgi->param($key_item);
+	        if ($form_keys_hash{$key_item} ne $item_value) {
+	            return 'failed : Parameter values did not match';
+	        }
+	    }
+    } 
 
-    my $cgi = CGI::Minimal->new;
-
-    my $string_pairs = { 'hello' => 'testing',
-                        'hello2' => 'standard encoded FORM',
-                 'submit button' => 'submit',
-    };
-    my @form_keys   = keys %$string_pairs;
-    my @param_keys  = $cgi->param;
-    if ($#form_keys != $#param_keys) {
-        return 'failed : Expected 3 parameters in x-www-form-urlencoded, found ' . ($#param_keys + 1);
-    }
-
-    my %form_keys_hash = map {$_ => $string_pairs->{$_} } @form_keys;
-    foreach my $key_item (@param_keys) {
-        if (! defined $form_keys_hash{$key_item}) {
-            return 'failed : Parameter names did not match';
+    {
+        local $^W;
+        $ENV{'QUERY_STRING'}      = undef;
+        $ENV{'CONTENT_LENGTH'}    = 0;
+        $ENV{'GATEWAY_INTERFACE'} = 'CGI/1.1'; 
+        $ENV{'CONTENT_TYPE'}      = 'application/x-www-form-urlencoded';
+        CGI::Minimal::reset_globals;
+	    my $cgi = CGI::Minimal->new;
+        my @parms = $cgi->param;
+        if ($#parms > -1) {
+            return 'failed: should have been no parms from undef QUERY_STRING - but is was not';
         }
-        my $item_value = $cgi->param($key_item);
-        if ($form_keys_hash{$key_item} ne $item_value) {
-            return 'failed : Parameter values did not match';
-        }
-    }
-        
+	}
 
     # Success is an empty string (no error message ;) )
+    return '';
+}
+
+######################################################
+# Test ordinary POST form decoding                   #
+######################################################
+
+sub test_post_form {
+
+    local $^W;
+
+    my $data = 'hello=testing&hello2=standard%20encoded+FORM&hello%31=1&hello3=&&=test&submit+button=submit';
+    $ENV{'CONTENT_LENGTH'}    = length($data);
+    $ENV{'GATEWAY_INTERFACE'} = 'CGI/1.1'; 
+    $ENV{'REQUEST_METHOD'}    = 'POST';
+    $ENV{'QUERY_STRING'}      = '';
+
+    foreach my $mode ('normal','max_size','zero_size') {
+        foreach my $content_type ('application/x-www-form-urlencoded', undef) {
+            $ENV{'CONTENT_TYPE'}      = $content_type;
+            my $test_file = "test-data.$$.data";
+            open (TESTFILE,">$test_file") || return ("failed : could not open test file $test_file for writing: $!");
+            binmode (TESTFILE);
+            print TESTFILE $data;
+            close (TESTFILE);
+                
+            # "Bad evil naughty Zoot"
+            CGI::Minimal::reset_globals;
+            if ($mode eq 'max_size') {
+                CGI::Minimal::max_read_size(10);
+            } elsif ($mode eq 'zero_size') {
+                CGI::Minimal::max_read_size(0);
+            }
+            open (STDIN,$test_file) || return ("failed : could not open test file $test_file for reading: $!");
+            my $cgi = CGI::Minimal->new;
+            close (STDIN);
+            unlink $test_file;
+    
+            if (($mode eq 'max_size') or ($mode eq 'zero_size')) {
+                unless ($cgi->truncated) {
+                    return 'failed: max read size not honored';
+                }
+                next;
+            }
+    	    my $string_pairs = { 'hello' => 'testing',
+    	                        'hello2' => 'standard encoded FORM',
+    	                        'hello3' => '',
+                                'hello1' => '1',
+                                ''       => 'test',
+                                ''       => '',
+    	                 'submit button' => 'submit',
+    	    };
+    	    my @form_keys   = keys %$string_pairs;
+            my $expected_keys = $#form_keys + 1;
+    	    my @param_keys  = $cgi->param;
+    	    if ($#form_keys != $#param_keys) {
+    	        return "failed : Expected $expected_keys parameters in x-www-form-urlencoded, found " . ($#param_keys + 1);
+    	    }
+    	
+    	    my %form_keys_hash = map {$_ => $string_pairs->{$_} } @form_keys;
+    	    foreach my $key_item (@param_keys) {
+    	        if (! defined $form_keys_hash{$key_item}) {
+    	            return 'failed : Parameter names did not match';
+    	        }
+    	        my $item_value = $cgi->param($key_item);
+    	        if ($form_keys_hash{$key_item} ne $item_value) {
+    	            return 'failed : Parameter values did not match';
+    	        }
+    	    }
+        }
+    }
     return '';
 }
 
@@ -298,24 +391,28 @@ sub test_multipart_form {
         }
         my $string_pairs = { 'hello' => 'testing',
                             'hello2' => 'testing2',
+                            'hello3' => '-----------------------------20lkjsdlkjsd',
                      'submit button' => 'submit',
         };
         my %mime_types = (
                 'hello'         => 'text/plain',
                 'hello2'        => 'text/html',
+                'hello3'        => 'text/html',
                 'submit button' => 'text/plain',
         );
         my %filenames = (
                 'hello'         => 'hello1.txt',
                 'hello2'        => 'example',
+                'hello3'        => 'example3',
                 'submit button' => '',
         );
 
         {
             my @form_keys   = keys %$string_pairs;
             my @param_keys  = $cgi->param;
+            my $expected_n  = $#form_keys + 1;
             if ($#form_keys != $#param_keys) {
-                return 'failed : Expected 3 parameters in multipart form, found '
+                return "failed : Expected $expected_n parameters in multipart form, found "
                             . ($#param_keys + 1)
                             . ". testing codepoint " . $boundary_test_code->{$boundary}
                             . " "
@@ -345,8 +442,9 @@ sub test_multipart_form {
         {
             my @form_keys   = keys %$string_pairs;
             my @param_keys  = $cgi->param_mime;
+            my $n_expected  = $#form_keys + 1;
             if ($#form_keys != $#param_keys) {
-                return 'failed : Expected 3 parameters in mime params for multipart form, found '
+                return "failed : Expected $n_expected parameters in mime params for multipart form, found "
                             . ($#param_keys + 1)
                             . ". testing codepoint " . $boundary_test_code->{$boundary}
                             . " "
@@ -364,8 +462,9 @@ sub test_multipart_form {
         {
             my @form_keys   = keys %$string_pairs;
             my @param_keys  = $cgi->param_filename;
+            my $n_expected  = $#form_keys + 1;
             if ($#form_keys != $#param_keys) {
-                return 'failed : Expected 3 parameters in filename params for multipart form, found '
+                return "failed : Expected $n_expected parameters in filename params for multipart form, found "
                             . ($#param_keys + 1)
                             . ". testing codepoint " . $boundary_test_code->{$boundary}
                             . " "
@@ -396,6 +495,38 @@ sub test_multipart_form {
         if (0 != $#multihello2_filenames) {
             return 'failed: unexpected number of parameter filenames for single value';
         }
+        eval {
+            $cgi->param_mime('one','two');
+        };
+        unless ($@) {
+            return 'failed: failed to catch invalid number of param_mime parameters';
+        }
+
+        my @null_parms = $cgi->param_mime('one');
+        unless (-1 == $#null_parms) {
+            return 'failed: failed to handle undefined mime parameter request correctly in array context';
+        }
+
+        my $null_parm = $cgi->param_mime('one');
+        if (defined $null_parm) {
+            return 'failed: failed to handle undefined mime parameter request correctly in scalar context';
+        }
+
+        @null_parms = $cgi->param_filename('one');
+        unless (-1 == $#null_parms) {
+            return 'failed: failed to handle undefined filename parameter request correctly in array context';
+        }
+        $null_parm = $cgi->param_filename('one');
+        if (defined $null_parm) {
+            return 'failed: failed to handle undefined filename parameter request correctly in scalar context';
+        }
+        eval {
+            $cgi->param_filename('one','two');
+        };
+        unless ($@) {
+            return 'failed: failed to catch invalid number of param_filename parameters';
+        }
+
     }
 
     # Success is an empty string (no error message ;) )
@@ -430,6 +561,11 @@ Content-Disposition: form-data; name="hello2"; filename="example"
 Content-Type: text/html
 
 testing2
+-----------------------------$boundary
+Content-Disposition: form-data; name="hello3"; filename="example3"
+Content-Type: text/html
+
+-----------------------------20lkjsdlkjsd
 -----------------------------$boundary
 Content-Disposition: form-data; name="submit button"
 
