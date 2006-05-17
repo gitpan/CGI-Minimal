@@ -41,6 +41,7 @@ sub test_raw_buffer {
     # raw buffer tests
     {
         CGI::Minimal::reset_globals;
+        CGI::Minimal::allow_hybrid_post_get(1);
         my $raw_buffer = CGI::Minimal::raw();
         if (defined $raw_buffer) {
             return 'failed: reset globals failed to reset raw buffer';
@@ -52,6 +53,7 @@ sub test_raw_buffer {
         }
    
     }
+
     # Success is an empty string (no error message ;) )
     return '';
 }
@@ -72,6 +74,7 @@ sub test_no_params {
 
     {
         CGI::Minimal::reset_globals;
+        CGI::Minimal::allow_hybrid_post_get(1);
 
         my $cgi = CGI::Minimal->new;
 
@@ -100,6 +103,7 @@ sub test_repeated_params {
 
     {
         CGI::Minimal::reset_globals;
+        CGI::Minimal::allow_hybrid_post_get(1);
         my $cgi = CGI::Minimal->new;
     
         my $string_pairs = { 'hello' => ['first', 'second', 'third', 'fourth'], };
@@ -150,6 +154,7 @@ sub test_sgml_form {
     $ENV{'REQUEST_METHOD'}    = 'GET';
 
     CGI::Minimal::reset_globals;
+    CGI::Minimal::allow_hybrid_post_get(1);
 
     my $cgi = CGI::Minimal->new;
 
@@ -200,6 +205,7 @@ sub test_bad_form {
 
     eval {
         CGI::Minimal::reset_globals;
+        CGI::Minimal::allow_hybrid_post_get(1);
         my $cgi = CGI::Minimal->new;
     };
     unless ($@) {
@@ -224,6 +230,7 @@ sub test_x_www {
 	    $ENV{'REQUEST_METHOD'} = $request_method;
 	
 	    CGI::Minimal::reset_globals;
+        CGI::Minimal::allow_hybrid_post_get(1);
 	
 	    my $cgi = CGI::Minimal->new;
 	
@@ -261,6 +268,7 @@ sub test_x_www {
         $ENV{'GATEWAY_INTERFACE'} = 'CGI/1.1'; 
         $ENV{'CONTENT_TYPE'}      = 'application/x-www-form-urlencoded';
         CGI::Minimal::reset_globals;
+        CGI::Minimal::allow_hybrid_post_get(1);
 	    my $cgi = CGI::Minimal->new;
         my @parms = $cgi->param;
         if ($#parms > -1) {
@@ -273,18 +281,18 @@ sub test_x_www {
 }
 
 ######################################################
-# Test ordinary POST form decoding                   #
+# Test hybrid POST/GET form decoding                 #
 ######################################################
 
 sub test_post_form {
 
     local $^W;
 
-    my $data = 'hello=testing&hello2=standard%20encoded+FORM&hello%31=1&hello3=&&=test&submit+button=submit';
+    my $data = 'hello2=standard%20encoded+FORM&hello%31=1&hello3=&&=test&submit+button=submit';
     $ENV{'CONTENT_LENGTH'}    = length($data);
     $ENV{'GATEWAY_INTERFACE'} = 'CGI/1.1'; 
     $ENV{'REQUEST_METHOD'}    = 'POST';
-    $ENV{'QUERY_STRING'}      = '';
+    $ENV{'QUERY_STRING'}      = 'hello=testing';
 
     foreach my $mode ('normal','max_size','zero_size') {
         foreach my $content_type ('application/x-www-form-urlencoded', undef) {
@@ -297,6 +305,7 @@ sub test_post_form {
                 
             # "Bad evil naughty Zoot"
             CGI::Minimal::reset_globals;
+            CGI::Minimal::allow_hybrid_post_get(1);
             if ($mode eq 'max_size') {
                 CGI::Minimal::max_read_size(10);
             } elsif ($mode eq 'zero_size') {
@@ -344,13 +353,15 @@ sub test_post_form {
 }
 
 ######################################################
-# Test multiparm form decoding                       #
+# Test multiparm hybrid form decoding                #
 ######################################################
 
 sub test_multipart_form {
     my ($mode) = @_;
     $mode = '' unless (defined $mode);
     local $^W;
+
+    $ENV{'QUERY_STRING'} = 'hello=testing&otherthing=alpha';
 
     my $basic_boundary = 'lkjsdlkjsd';
     my @boundaries_list = ();
@@ -379,6 +390,7 @@ sub test_multipart_form {
       
         # "Bad evil naughty Zoot"
         CGI::Minimal::reset_globals;
+        CGI::Minimal::allow_hybrid_post_get(1);
         open (STDIN,$test_file) || return ("failed : could not open test file $test_file for reading: $!");
         my $cgi = CGI::Minimal->new;
         close (STDIN);
@@ -389,22 +401,25 @@ sub test_multipart_form {
         } else {
             if ($cgi->truncated) { return "failed: form falsely appeared truncated for boundary char " . $boundary_test_code->{$boundary}; }
         }
-        my $string_pairs = { 'hello' => 'testing',
+        my $string_pairs = { 'hello' => '<data>also testing</data>',
                             'hello2' => 'testing2',
                             'hello3' => '-----------------------------20lkjsdlkjsd',
                      'submit button' => 'submit',
+                     'otherthing'    => 'alpha',
         };
         my %mime_types = (
-                'hello'         => 'text/plain',
+                'hello'         => 'application/xml',
                 'hello2'        => 'text/html',
                 'hello3'        => 'text/html',
                 'submit button' => 'text/plain',
+                'otherthing'    => 'text/plain',
         );
         my %filenames = (
-                'hello'         => 'hello1.txt',
+                'hello'         => 'hello1.xml',
                 'hello2'        => 'example',
                 'hello3'        => 'example3',
                 'submit button' => '',
+                'otherthing'    => '',
         );
 
         {
@@ -426,11 +441,11 @@ sub test_multipart_form {
                 }
                 my $item_value = $cgi->param($key_item);
                 if ($form_keys_hash{$key_item} ne $item_value) {
-                    return 'failed : Parameter values did not match';
+                    return "failed : Parameter values for '$key_item' did not match (expected '$form_keys_hash{$key_item}', got '$item_value')";
                 }
                 my $item_mime_type = $cgi->param_mime($key_item);
                 unless ($item_mime_type eq $mime_types{$key_item}) {
-                    return 'failed : Parameter MIME types did not match';
+                    return "failed : Parameter MIME types did not match (expeced '$mime_types{$key_item}', got '$item_mime_type'";
                 }
                 my $item_filename = $cgi->param_filename($key_item);
                 unless ($item_filename eq $filenames{$key_item}) {
@@ -548,12 +563,8 @@ sub multipart_data {
     
     my $data =<<"EOD";
 -----------------------------$boundary
-Content-Disposition: form-data; name="hello"; filename="hello1.txt"
-
-testing
------------------------------$boundary
 Content-Disposition: form-data; name="hello"; filename="hello1.xml"
-Content-Type: application/xml 
+Content-Type: application/xml
 
 <data>also testing</data>
 -----------------------------$boundary

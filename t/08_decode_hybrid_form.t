@@ -41,6 +41,7 @@ sub test_raw_buffer {
     # raw buffer tests
     {
         CGI::Minimal::reset_globals;
+        CGI::Minimal::allow_hybrid_post_get(1);
         my $raw_buffer = CGI::Minimal::raw();
         if (defined $raw_buffer) {
             return 'failed: reset globals failed to reset raw buffer';
@@ -72,6 +73,7 @@ sub test_no_params {
 
     {
         CGI::Minimal::reset_globals;
+        CGI::Minimal::allow_hybrid_post_get(1);
 
         my $cgi = CGI::Minimal->new;
 
@@ -100,6 +102,7 @@ sub test_repeated_params {
 
     {
         CGI::Minimal::reset_globals;
+        CGI::Minimal::allow_hybrid_post_get(1);
         my $cgi = CGI::Minimal->new;
     
         my $string_pairs = { 'hello' => ['first', 'second', 'third', 'fourth'], };
@@ -150,6 +153,7 @@ sub test_sgml_form {
     $ENV{'REQUEST_METHOD'}    = 'GET';
 
     CGI::Minimal::reset_globals;
+    CGI::Minimal::allow_hybrid_post_get(1);
 
     my $cgi = CGI::Minimal->new;
 
@@ -200,6 +204,7 @@ sub test_bad_form {
 
     eval {
         CGI::Minimal::reset_globals;
+        CGI::Minimal::allow_hybrid_post_get(1);
         my $cgi = CGI::Minimal->new;
     };
     unless ($@) {
@@ -224,6 +229,7 @@ sub test_x_www {
 	    $ENV{'REQUEST_METHOD'} = $request_method;
 	
 	    CGI::Minimal::reset_globals;
+        CGI::Minimal::allow_hybrid_post_get(1);
 	
 	    my $cgi = CGI::Minimal->new;
 	
@@ -261,6 +267,7 @@ sub test_x_www {
         $ENV{'GATEWAY_INTERFACE'} = 'CGI/1.1'; 
         $ENV{'CONTENT_TYPE'}      = 'application/x-www-form-urlencoded';
         CGI::Minimal::reset_globals;
+        CGI::Minimal::allow_hybrid_post_get(1);
 	    my $cgi = CGI::Minimal->new;
         my @parms = $cgi->param;
         if ($#parms > -1) {
@@ -297,6 +304,7 @@ sub test_post_form {
                 
             # "Bad evil naughty Zoot"
             CGI::Minimal::reset_globals;
+            CGI::Minimal::allow_hybrid_post_get(1);
             if ($mode eq 'max_size') {
                 CGI::Minimal::max_read_size(10);
             } elsif ($mode eq 'zero_size') {
@@ -379,6 +387,7 @@ sub test_multipart_form {
       
         # "Bad evil naughty Zoot"
         CGI::Minimal::reset_globals;
+        CGI::Minimal::allow_hybrid_post_get(1);
         open (STDIN,$test_file) || return ("failed : could not open test file $test_file for reading: $!");
         my $cgi = CGI::Minimal->new;
         close (STDIN);

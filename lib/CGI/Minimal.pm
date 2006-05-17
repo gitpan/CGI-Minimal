@@ -9,9 +9,10 @@ use strict;
 $CGI::Minimal::_query            = undef;
 $CGI::Minimal::form_initial_read = undef;
 $CGI::Minimal::_BUFFER           = undef;
+$CGI::Minimal::_allow_hybrid_post_get = 0;
 
 BEGIN {
-	$CGI::Minimal::VERSION = "1.24";
+	$CGI::Minimal::VERSION = "1.25";
 	if (exists $ENV{'MOD_PERL'}) {
 		$| = 1;
 		require Apache;
@@ -54,6 +55,7 @@ sub new {
 
 sub reset_globals {
 	$CGI::Minimal::form_initial_read = 1;
+	$CGI::Minimal::_allow_hybrid_post_get = 0;
 	$CGI::Minimal::_query = {};
 	bless $CGI::Minimal::_query;
 	my $pkg = __PACKAGE__;
@@ -69,6 +71,16 @@ sub reset_globals {
 
 # For backward compatibility 
 sub _reset_globals { reset_globals; }
+
+###
+
+sub allow_hybrid_post_get {
+	if (@_ > 0) {
+		$CGI::Minimal::_allow_hybrid_post_get = $_[0];
+	} else {
+		return $CGI::Minimal::_allow_hybrid_post_get;
+	}
+}
 
 ###
 
@@ -174,6 +186,12 @@ sub max_read_size {
 sub _read_form {
 	my $self = shift;
 
+	my $pkg  = __PACKAGE__;
+	my $vars = $self->{$pkg};
+
+	$vars->{'field'} = {};
+	$vars->{'field_names'} = [];
+
 	my $req_method=$ENV{"REQUEST_METHOD"};
 	if (! defined $req_method) {
 		my $input = <STDIN>;
@@ -185,7 +203,10 @@ sub _read_form {
 	}
 
 	if ($req_method eq 'POST') {
-		$self->_read_post;
+		$self->_read_post; 
+		if ($CGI::Minimal::_allow_hybrid_post_get) {
+			$self->_read_get;
+		}
 	} elsif (($req_method eq 'GET') || ($req_method eq 'HEAD')) {
 		$self->_read_get;
 	} else {
@@ -244,7 +265,9 @@ sub _read_get {
 	} else {
 		$buffer = $ENV{'QUERY_STRING'} if (defined $ENV{'QUERY_STRING'});
 	}
-	$CGI::Minimal::_BUFFER = \$buffer;
+	if ($ENV{'REQUEST_METHOD'} ne 'POST') {
+		$CGI::Minimal::_BUFFER = \$buffer;
+	}
 	$self->_burst_URL_encoded_buffer($buffer,'[;&]');
 }
 
@@ -264,8 +287,6 @@ sub _burst_URL_encoded_buffer {
 	my ($filename) = "";
 
 	my @pairs = $buffer ? split(/$spliton/, $buffer) : ();
-	$vars->{'field'} = {};
-	$vars->{'field_names'} = [];
 
 	foreach my $pair (@pairs) {
 		my ($name, $data) = split(/=/,$pair,2);

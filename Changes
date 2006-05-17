@@ -1,3 +1,5 @@
+ 1.25 20 Apr 2006 - Added 'allow_hybrid_post_get' class method. Tweaked file permissions.
+                    Added regression tests for hybrid forms.
 
  1.24 23 Sep 2005 - Added 'Carp' to install requirements. Extended build tests.
                     Fixed multi-part form decoding bug in handling of degenerate MIME

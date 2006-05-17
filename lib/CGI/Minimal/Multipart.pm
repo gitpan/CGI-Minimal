@@ -5,7 +5,7 @@ package CGI::Minimal;
 # Copyright 1999-2004 Benjamin Franz. All Rights Reserved.
 
 # I don't 'use warnings;' here because it pulls in ~ 20Kbytes of code
-# I don't use vars qw ($_query $VERSION $form_initial_read $_BUFFER);
+# and is incompatible with perl's older than 5.6
 
 use strict;
 
@@ -88,9 +88,6 @@ sub _burst_multipart_buffer {
 
 	$bdry = "--$bdry(--)?\015\012";
 	my @pairs = split(/$bdry/, $buffer);
-
-	$vars->{'field'} = {};
-	$vars->{'field_names'} = [];
 
 	foreach my $pair (@pairs) {
 		next if (! defined $pair);

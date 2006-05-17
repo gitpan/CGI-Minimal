@@ -132,6 +132,9 @@ results (sorted by speed):
 
 =head1 CHANGES
 
+ 1.25 20 Apr 2006 - Added 'allow_hybrid_post_get' class method. Tweaked file permissions.
+                    Added regression tests for hybrid forms.
+
  1.24 23 Sep 2005 - Added 'Carp' to install requirements. Extended build tests.
                     Fixed multi-part form decoding bug in handling of degenerate MIME
                     boundaries. Added fatal errors for mis-calling of param_mime
@@ -547,6 +550,42 @@ Example:
 
 =over 4
 
+=item CGI::Minimal::allow_hybrid_post_get(0|1);
+
+The HTTP standard specifies that POST parameters are passed
+in the body of the HTTP request while GET parameters are
+passed as part of the URL. The two B<are not> supposed
+to be mixed, and the semantics of doing so are undefined,
+but many people have done so anyway.
+
+By default, CGI::Minimal does not mix the two.
+
+If you wish to do so (with a resulting speed penalty for processing
+'POST' forms since it has to B<also> process the GET query string)
+you can do so by setting allow hybrid post/get via the
+allow_hybrid_post_get static method before calling
+'new' for the first time:
+
+Example:
+
+  use CGI::Minimal;
+
+  CGI::Minimal::allow_hybrid_post_get(1);
+  my $cgi = CGI::Minimal->new;
+
+CGI::Minimal decodes the POST parameters first, and appends
+the GET parameters B<after> them.
+
+Note: Setting allow hybrid post/get on a POST B<does not>
+append the GET query string (if any) to the POST data returned
+by the 'raw' method: It continues to return only the raw
+POST message body for a POST request and the raw GET query string
+for a GET (or HEAD) request.
+
+=back
+
+=over 4
+
 =item CGI::Minimal::reset_globals;
 
 Sets the CGI::Minimal object to it's initial state (the
@@ -597,7 +636,7 @@ Benjamin Franz <snowhare@nihongo.org>
 
 =head1 VERSION
 
-Version 1.24 23 Sep 2005
+Version 1.25 20 April 2006 
 
 =head1 COPYRIGHT
 
