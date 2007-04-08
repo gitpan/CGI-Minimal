@@ -71,16 +71,18 @@ sub test_url_encoding {
         my $encoded_form = CGI::Minimal->url_encode($character);
         if ($character =~ m/[-_.a-zA-Z0-9]/) {
             unless ($encoded_form eq $character) {
-                push (@failed_encoding_code_points, chr($character_number));
+                push (@failed_encoding_code_points, $character_number);
+                warn("Mis-match 1\n");
             }
         } else {
             unless ($encoded_form eq $encoding_table[$character_number]) {
-                push (@failed_encoding_code_points, chr($character_number));
+                push (@failed_encoding_code_points, $character_number);
+                warn("Mis-match 2 - expected $encoding_table[$character_number] got $encoded_form\n");
             }
 
         }
         if (0 < @failed_encoding_code_points) {
-            return "failed to handle encoding " . join(' ',@failed_encoding_code_points); 
+            return "failed to handle encoding characters for decimal character points " . join(', ',@failed_encoding_code_points); 
         }
     }
 

@@ -1,3 +1,15 @@
+ 1.26 06 Apr 2007 - Added decoding of Javascript/EMCAScript style unicode 
+                    escaped (%uxxxx form) parameter data (both to the main
+                    'param' method and to the 'url_decode'/'url_encode' methods)
+                    at the suggestion of Michael Kröll (the core code for
+                    this additional functionality is derived from CGI.pm).
+
+                    Fixed META.yml problems introduced with 1.25.
+
+                    Changed POD/POD Coverage tests to only execute if specifically requested
+
+                    Added examples directory and scripts
+
  1.25 20 Apr 2006 - Added 'allow_hybrid_post_get' class method. Tweaked file permissions.
                     Added regression tests for hybrid forms.
 

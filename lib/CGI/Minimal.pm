@@ -2,25 +2,45 @@ package CGI::Minimal;
 
 use strict;
 
-# I don't 'use warnings;' here because it pulls in ~ 40Kbytes of code
+# I don't 'use warnings;' here because it pulls in ~ 40Kbytes of code and
+# interferes with 5.005 and earlier versions of Perl.
+#
 # I don't use vars qw ($_query $VERSION $form_initial_read $_BUFFER); for
-# same reason. The code is clean - but the pragmas cause performance issues.
+# because it also pulls in warnings under later versions of perl.
+# The code is clean - but the pragmas cause performance issues.
 
 $CGI::Minimal::_query            = undef;
 $CGI::Minimal::form_initial_read = undef;
 $CGI::Minimal::_BUFFER           = undef;
 $CGI::Minimal::_allow_hybrid_post_get = 0;
+$CGI::Minimal::_mod_perl              = 0;
 
-BEGIN {
-	$CGI::Minimal::VERSION = "1.25";
-	if (exists $ENV{'MOD_PERL'}) {
-		$| = 1;
+$CGI::Minimal::VERSION = "1.26";
+
+if (exists ($ENV{'MOD_PERL'}) && (0 == $CGI::Minimal::_mod_perl)) {
+	$| = 1;
+	my $env_mod_perl = $ENV{'MOD_PERL'};
+	if ($env_mod_perl =~ m#^mod_perl/1.99#) { # Redhat's almost-but-not-quite ModPerl2....
+		require Apache::compat;
+		require CGI::Minimal::Misc;
+		require CGI::Minimal::Multipart;
+		$CGI::Minimal::_mod_perl = 1;
+
+	} elsif (exists ($ENV{MOD_PERL_API_VERSION}) && ($ENV{MOD_PERL_API_VERSION} == 2)) {
+		require Apache2::RequestUtil;
+		require Apache2::RequestIO;
+		require APR::Pool;
+		require CGI::Minimal::Misc;
+		require CGI::Minimal::Multipart;
+		$CGI::Minimal::_mod_perl = 2;
+
+	} else {
 		require Apache;
 		require CGI::Minimal::Misc;
 		require CGI::Minimal::Multipart;
+		$CGI::Minimal::_mod_perl = 1;
 	}
 }
-
 binmode STDIN;
 reset_globals();
 
@@ -38,14 +58,16 @@ sub import {
 ####
 
 sub new {
-
 	if ($CGI::Minimal::form_initial_read) {
 		binmode STDIN;
 		$CGI::Minimal::_query->_read_form;
 		$CGI::Minimal::form_initial_read = 0;
 	}
-	if (exists $ENV{'MOD_PERL'}) {
+	if (1 == $CGI::Minimal::_mod_perl) {
 		Apache->request->register_cleanup(\&CGI::Minimal::reset_globals);
+
+	} elsif (2 == $CGI::Minimal::_mod_perl) {
+		Apache2::RequestUtil->request->pool->cleanup_register(\&CGI::Minimal::reset_globals);
 	}
 
 	return $CGI::Minimal::_query;
@@ -260,8 +282,14 @@ sub _read_get {
 	my $self = shift;
 
 	my $buffer = '';
-	if (exists $ENV{'MOD_PERL'}) {
+	if (1 == $CGI::Minimal::_mod_perl) {
 		$buffer = Apache->request->args;
+	} elsif (2 == $CGI::Minimal::_mod_perl) {
+		my $r = Apache2::RequestUtil->request;
+		$buffer = $r->args;
+		$r->discard_request_body();
+		$r->subprocess_env unless exists $ENV{'REQUEST_METHOD'};
+
 	} else {
 		$buffer = $ENV{'QUERY_STRING'} if (defined $ENV{'QUERY_STRING'});
 	}
@@ -293,10 +321,12 @@ sub _burst_URL_encoded_buffer {
 
 		$name = '' unless (defined $name);
 		$name =~ s/\+/ /gs;
-		$name =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/egs;
+		$name =~ s/%(?:([0-9a-fA-F]{2})|u([0-9a-fA-F]{4}))/
+		defined($1)? chr hex($1) : _utf8_chr(hex($2))/ge;
 		$data = '' unless (defined $data);
 		$data =~ s/\+/ /gs;
-		$data =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/egs;
+		$data =~ s/%(?:([0-9a-fA-F]{2})|u([0-9a-fA-F]{4}))/
+		defined($1)? chr hex($1) : _utf8_chr(hex($2))/ge;
 
 		if (! defined ($vars->{'field'}->{$name}->{'count'})) {
 			push (@{$vars->{'field_names'}},$name);
@@ -308,6 +338,50 @@ sub _burst_URL_encoded_buffer {
 		$record->{'value'}->[$f_count] = $data;
 		$record->{'filename'}->[$f_count]  = $filename;
 		$record->{'mime_type'}->[$f_count] = $mime_type;
+	}
+}
+
+####
+#
+# _utf8_chr() taken from CGI::Util
+# Copyright 1995-1998, Lincoln D. Stein.  All rights reserved.  
+sub _utf8_chr {
+	my $c = shift(@_);
+	return chr($c) if $] >= 5.006;
+
+	if ($c < 0x80) {
+		return sprintf("%c", $c);
+	} elsif ($c < 0x800) {
+		return sprintf("%c%c", 0xc0 | ($c >> 6), 0x80 | ($c & 0x3f));
+	} elsif ($c < 0x10000) {
+		return sprintf("%c%c%c",
+					   0xe0 |  ($c >> 12),
+					   0x80 | (($c >>  6) & 0x3f),
+					   0x80 | ( $c & 0x3f));
+	} elsif ($c < 0x200000) {
+		return sprintf("%c%c%c%c",
+					   0xf0 |  ($c >> 18),
+					   0x80 | (($c >> 12) & 0x3f),
+					   0x80 | (($c >>  6) & 0x3f),
+					   0x80 | ( $c & 0x3f));
+	} elsif ($c < 0x4000000) {
+		return sprintf("%c%c%c%c%c",
+					   0xf8 |  ($c >> 24),
+					   0x80 | (($c >> 18) & 0x3f),
+					   0x80 | (($c >> 12) & 0x3f),
+					   0x80 | (($c >>  6) & 0x3f),
+					   0x80 | ( $c & 0x3f));
+
+	} elsif ($c < 0x80000000) {
+		return sprintf("%c%c%c%c%c%c",
+					   0xfc |  ($c >> 30),
+					   0x80 | (($c >> 24) & 0x3f),
+					   0x80 | (($c >> 18) & 0x3f),
+					   0x80 | (($c >> 12) & 0x3f),
+					   0x80 | (($c >> 6)  & 0x3f),
+					   0x80 | ( $c & 0x3f));
+	} else {
+		return _utf8_chr(0xfffd);
 	}
 }
 
@@ -331,7 +405,8 @@ sub url_encode {
 	my $self = shift;
 	my ($s)=@_;
 	return '' if (! defined ($s));
-	$s=~s/([^-_.a-zA-Z0-9])/"\%".unpack("H",$1).unpack("h",$1)/egs;
+	$s= pack("C*", unpack("C*", $s));
+	$s=~s/([^-_.a-zA-Z0-9])/sprintf("%%%02x",ord($1))/eg;
 	$s;
 }
 

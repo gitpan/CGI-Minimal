@@ -72,11 +72,11 @@ sub _internal_date_rfc1123 {
 
 sub _internal_url_decode {
 	my $self = shift;
-
 	my ($s) = @_;
 	return '' if (! defined($s));
 	$s =~ s/\+/ /gs;
-	$s =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/egs;
+	$s =~ s/%(?:([0-9a-fA-F]{2})|u([0-9a-fA-F]{4}))/
+		defined($1)? chr hex($1) : _utf8_chr(hex($2))/ge;
 	return $s;
 }
 

@@ -7,6 +7,9 @@ Build.PL
 Makefile.PL
 README
 TODO
+examples/calling_parms.cgi
+examples/hello_world.cgi
+examples/simple_math.cgi
 lib/CGI/Minimal.pm
 lib/CGI/Minimal/Misc.pm
 lib/CGI/Minimal/Multipart.pm

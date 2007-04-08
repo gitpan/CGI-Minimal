@@ -1,11 +1,23 @@
-# http://module-build.sourceforge.net/META-spec.html
-#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
-name:         CGI-Minimal
-version:      1.25
-version_from: lib/CGI/Minimal.pm
-installdirs:  site
+---
+name: CGI-Minimal
+version: !!perl/hash:Module::Build::Version
+  original: 1.26
+  version:
+    - 1
+    - 260
+author:
+  - 'Benjamin Franz <snowhare@nihongo.org>'
+abstract: A lightweight CGI form processing package
+license: perl
+resources:
+  license: http://dev.perl.org/licenses/
 requires:
-    Carp:                          0
-
-distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.30
+  Carp: 0
+provides:
+  CGI::Minimal:
+    file: lib/CGI/Minimal.pm
+    version: 1.26
+generated_by: Module::Build version 0.2804
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2

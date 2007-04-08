@@ -132,6 +132,20 @@ results (sorted by speed):
 
 =head1 CHANGES
 
+ 1.26 06 Apr 2007 - Added decoding of Javascript/EMCAScript style unicode 
+                    escaped (%uxxxx form) parameter data (both to the main
+                    'param' method and to the 'url_decode'/'url_encode' methods)
+                    at the suggestion of Michael Kröll (the core code for
+                    this additional functionality is derived from CGI.pm).
+
+                    Added support for ModPerl2.
+
+                    Fixed META.yml problems introduced with 1.25.
+
+                    Changed POD/POD Coverage tests to only execute if specifically requested
+                    
+                    Added examples directory and scripts
+
  1.25 20 Apr 2006 - Added 'allow_hybrid_post_get' class method. Tweaked file permissions.
                     Added regression tests for hybrid forms.
 
@@ -455,7 +469,7 @@ Example:
 
 =item url_decode($string);
 
-Returns URL *decoding* of input string (%xx substitutions
+Returns URL *decoding* of input string (%xx and %uxxxx substitutions
 are decoded to their actual values).
 
 Example:
@@ -636,7 +650,7 @@ Benjamin Franz <snowhare@nihongo.org>
 
 =head1 VERSION
 
-Version 1.25 20 April 2006 
+Version 1.26 01 Feb 2007 
 
 =head1 COPYRIGHT
 
