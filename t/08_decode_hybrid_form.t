@@ -4,18 +4,17 @@ use strict;
 use lib ('./blib','./lib','../blib','../lib');
 use CGI::Minimal;
 
-my $do_tests = [1..9];
+my $do_tests = [1..8];
 
 my $test_subs = {
      1 => { -code => \&test_x_www,            -desc => 'decode application/x-www-form-urlencoded   ' },
      2 => { -code => \&test_sgml_form,        -desc => 'decode application/sgml-form-urlencoded    ' },
-     3 => { -code => \&test_bad_form,         -desc => 'detect bad calls                           ' },
-     4 => { -code => \&test_repeated_params,  -desc => 'decode repeated parameter options          ' },
-     5 => { -code => \&test_raw_buffer,       -desc => 'raw buffer                                 ' },
-     6 => { -code => \&test_no_params,        -desc => 'no parameters                              ' },
-     7 => { -code => \&test_truncation,       -desc => 'detect form truncation                     ' },
-     8 => { -code => \&test_multipart_form,   -desc => 'decode multipart/form-data                 ' },
-     9 => { -code => \&test_post_form,        -desc => 'decode ordinary POST form data             ' },
+     3 => { -code => \&test_repeated_params,  -desc => 'decode repeated parameter options          ' },
+     4 => { -code => \&test_raw_buffer,       -desc => 'raw buffer                                 ' },
+     5 => { -code => \&test_no_params,        -desc => 'no parameters                              ' },
+     6 => { -code => \&test_truncation,       -desc => 'detect form truncation                     ' },
+     7 => { -code => \&test_multipart_form,   -desc => 'decode multipart/form-data                 ' },
+     8 => { -code => \&test_post_form,        -desc => 'decode ordinary POST form data             ' },
 };
 
 run_tests($test_subs,$do_tests);

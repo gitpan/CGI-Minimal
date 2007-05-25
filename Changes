@@ -1,3 +1,12 @@
+ 1.27 25 May 2008 - Added example of a command line 'wrapper' script and
+                    of using environment variables as an alternate way
+                    to test scripts via the command line. Added example
+                    for use with FastCGI. Changed behavior for unsupported
+                    HTTP methods. The module used to 'croak' for unsupported
+                    methods, it now 'carp's instead and treats as a 'GET'
+                    (behavior change at suggestion of Roman Mashirov to support
+                    FastCGI better).
+
  1.26 06 Apr 2007 - Added decoding of Javascript/EMCAScript style unicode 
                     escaped (%uxxxx form) parameter data (both to the main
                     'param' method and to the 'url_decode'/'url_encode' methods)

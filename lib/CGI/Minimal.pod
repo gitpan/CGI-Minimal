@@ -59,6 +59,13 @@ Example:
  bash> ./myscript
  a=b&b=d<return>
 
+Alternatively, you can set the environment variable REQUEST_METHOD to 'GET'
+and set the environment variable QUERY_STRING to pass your CGI parameters.
+
+Example:
+
+bash> REQUEST_METHOD=GET QUERY_STRING='a=b' ./myscript
+
 =head2 Performance Hints
 
 If you are using this module as part of a conventional standalone CGI
@@ -131,6 +138,15 @@ results (sorted by speed):
   null Perl script              via mod_perl     - 500 fetches per second
 
 =head1 CHANGES
+
+ 1.27 25 May 2008 - Added example of a command line 'wrapper' script and
+                    of using environment variables as an alternate way
+                    to test scripts via the command line. Added example
+                    for use with FastCGI. Changed behavior for unsupported
+                    HTTP methods. The module used to 'croak' for unsupported
+                    methods, it now 'carp's instead and treats as a 'GET'
+                    (change at suggestion of Roman Mahirov to better support
+                    FastCGI).
 
  1.26 06 Apr 2007 - Added decoding of Javascript/EMCAScript style unicode 
                     escaped (%uxxxx form) parameter data (both to the main
@@ -604,7 +620,7 @@ for a GET (or HEAD) request.
 
 Sets the CGI::Minimal object to it's initial state (the
 state it is in before calling 'new' for the first time
-in a CGI interaction)
+in a CGI interaction). 
 
 This static method not needed if you are running CGI::Minimal
 either as a traditional CGI script or under mod_perl. In
@@ -613,14 +629,23 @@ this static method _before_ calling ->new or the module
 will not 'forget' the data parameters passed
 from the last time it was executed.
 
-Ex.:
+FCGI Example:
 
+ #!/usr/bin/perl -Tw
+
+ use strict;
+ use FCGI;
  use CGI::Minimal;
 
- CGI::Minimal::reset_globals;
- my $cgi = CGI::Minimal->new;
+ my $request = FCGI::Request();
+ while($request->Accept() >= 0) {
+    CGI::Minimal::reset_globals();
+    my $value = CGI::Minimal->new->param('a');
+    print "Status: 200 OK\015\012Content-Type: text/plain\015\012\015\012a = $value\n";
+}
 
-Note: This resets the the 'max_read_size' back to its default
+
+Note: This method resets the the 'max_read_size' back to its default
 of 1_000_000 octets ('bytes'); so if you want to use a different
 size, you need to restore it after you do the 'reset_globals' call.
 
@@ -642,7 +667,7 @@ None known.
 
 =head1 TODO
 
-Investigate ModPerl2 compatibility
+To be determined. ^_^
 
 =head1 AUTHOR
 
@@ -650,7 +675,7 @@ Benjamin Franz <snowhare@nihongo.org>
 
 =head1 VERSION
 
-Version 1.26 01 Feb 2007 
+Version 1.27 25 May 2007 
 
 =head1 COPYRIGHT
 

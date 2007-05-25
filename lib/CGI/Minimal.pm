@@ -15,7 +15,7 @@ $CGI::Minimal::_BUFFER           = undef;
 $CGI::Minimal::_allow_hybrid_post_get = 0;
 $CGI::Minimal::_mod_perl              = 0;
 
-$CGI::Minimal::VERSION = "1.26";
+$CGI::Minimal::VERSION = "1.27";
 
 if (exists ($ENV{'MOD_PERL'}) && (0 == $CGI::Minimal::_mod_perl)) {
 	$| = 1;
@@ -234,7 +234,8 @@ sub _read_form {
 	} else {
 		my $package = __PACKAGE__;
 		require Carp;
-		Carp::croak($package . " - Unsupported HTTP request method");
+		Carp::carp($package . " - Unsupported HTTP request method of '$req_method'. Treating as 'GET'");
+        $self->_read_get;
 	}
 }
 
