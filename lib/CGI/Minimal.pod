@@ -92,10 +92,6 @@ So a well written script tuned for performance will start like this:
 
  my $cgi = CGI::Minimal->new;
 
-The ':preload' option is available in CGI::Minimal (C<use CGI::Minimal qw (:preload);>)
-to compile all sub-components of the module at initial load time. This will I<slowdown>
-your script unless you are using one or more of the following methods:
-
 The ':no_subprocess_env' option is available (C<use CGI::Minimal qw (:no_subprocess_env);>)
 to suppress population of the %ENV hash with the standard CGI environment values when
 running under ModPerl2. This improves performance slightly under ModPerl2, but does not
@@ -110,6 +106,10 @@ This would manifest as the %ENV hash as being unexpectedly mostly empty in a scr
 B<didn't> use ':no_subprocess_env'. The fix for this is to call the C<CGI::Minimal::subprocess_env>
 class method in any script that requires the %ENV hash to be populated if it is sharing an Apache
 instance with scripts that use ':no_subprocess_env'.
+
+The ':preload' option is available in CGI::Minimal (C<use CGI::Minimal qw (:preload);>)
+to compile all sub-components of the module at initial load time. This will I<slowdown>
+your script unless you are using one or more of the following methods:
 
  dehtmlize       param_mime    param_filename
  date_rfc1123    url_decode    calling_parms_table
@@ -159,6 +159,8 @@ results (sorted by speed):
   null Perl script              via mod_perl     - 500 fetches per second
 
 =head1 CHANGES
+
+ 1.29 21 Aug 2007 - Documentation fix to performance hints section. No functional changes.
 
  1.28 18 Aug 2007 - Improved mod_perl2 handling (patch courtesy of Jeremy Nixon).
                     Added a ':no_subprocess_env' flag to suppress populating
@@ -735,7 +737,7 @@ Benjamin Franz <snowhare@nihongo.org>
 
 =head1 VERSION
 
-Version 1.28 18 Aug 2007 
+Version 1.29 21 Aug 2007 
 
 =head1 COPYRIGHT
 
