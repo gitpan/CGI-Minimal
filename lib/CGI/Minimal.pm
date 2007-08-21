@@ -9,13 +9,14 @@ use strict;
 # because it also pulls in warnings under later versions of perl.
 # The code is clean - but the pragmas cause performance issues.
 
-$CGI::Minimal::_query            = undef;
-$CGI::Minimal::form_initial_read = undef;
-$CGI::Minimal::_BUFFER           = undef;
-$CGI::Minimal::_allow_hybrid_post_get = 0;
-$CGI::Minimal::_mod_perl              = 0;
+$CGI::Minimal::_query                   = undef;
+$CGI::Minimal::form_initial_read        = undef;
+$CGI::Minimal::_BUFFER                  = undef;
+$CGI::Minimal::_allow_hybrid_post_get   = 0;
+$CGI::Minimal::_mod_perl                = 0;
+$CGI::Minimal::_no_subprocess_env       = 0;
 
-$CGI::Minimal::VERSION = "1.27";
+$CGI::Minimal::VERSION = "1.28";
 
 if (exists ($ENV{'MOD_PERL'}) && (0 == $CGI::Minimal::_mod_perl)) {
 	$| = 1;
@@ -48,16 +49,20 @@ reset_globals();
 
 sub import {
 	my $class = shift;
-	my @values = @_;
-	if (grep(/^:preload$/, @values)) {
+	my %flags = map { $_ => 1 } @_;
+	if ($flags{':preload'}) {
 		require CGI::Minimal::Misc;
 		require CGI::Minimal::Multipart;
 	}
+	$CGI::Minimal::_no_subprocess_env = $flags{':no_subprocess_env'};
 }
 
 ####
 
 sub new {
+	my $proto = shift;
+	my $pkg   = __PACKAGE__;
+
 	if ($CGI::Minimal::form_initial_read) {
 		binmode STDIN;
 		$CGI::Minimal::_query->_read_form;
@@ -93,6 +98,14 @@ sub reset_globals {
 
 # For backward compatibility 
 sub _reset_globals { reset_globals; }
+
+###
+
+sub subprocess_env {
+	if (2 == $CGI::Minimal::_mod_perl) {
+		Apache2::RequestUtil->request->subprocess_env;
+	}
+}
 
 ###
 
@@ -215,6 +228,10 @@ sub _read_form {
 	$vars->{'field_names'} = [];
 
 	my $req_method=$ENV{"REQUEST_METHOD"};
+	if ((2 == $CGI::Minimal::_mod_perl) and (not defined $req_method)) {
+		$req_method = Apache2::RequestUtil->request->method;
+	}
+
 	if (! defined $req_method) {
 		my $input = <STDIN>;
 		$input = '' if (! defined $input);
@@ -223,7 +240,6 @@ sub _read_form {
 		$self->_read_get;
 		return;
 	}
-
 	if ($req_method eq 'POST') {
 		$self->_read_post; 
 		if ($CGI::Minimal::_allow_hybrid_post_get) {
@@ -235,7 +251,7 @@ sub _read_form {
 		my $package = __PACKAGE__;
 		require Carp;
 		Carp::carp($package . " - Unsupported HTTP request method of '$req_method'. Treating as 'GET'");
-        $self->_read_get;
+		$self->_read_get;
 	}
 }
 
@@ -247,8 +263,16 @@ sub _read_post {
 	my $pkg  = __PACKAGE__;
 	my $vars = $self->{$pkg};
 
+	my $r;
+	if (2 == $CGI::Minimal::_mod_perl) {
+		$r = Apache2::RequestUtil->request;
+	}
+
 	my $read_length = $vars->{'max_buffer'};
 	my $clen = $ENV{'CONTENT_LENGTH'};
+	if ((2 == $CGI::Minimal::_mod_perl) and (not defined $clen)) {
+		$clen = $r->headers_in->get('Content-Length');
+	}
 	if ($clen < $read_length) {
 		$read_length = $clen;
 	}
@@ -256,12 +280,19 @@ sub _read_post {
 	my $buffer = '';
 	my $read_bytes = 0;
 	if ($read_length) {
-		$read_bytes = read(STDIN, $buffer, $read_length,0);
+		if (2 == $CGI::Minimal::_mod_perl) {
+			$read_bytes = $r->read($buffer,$read_length,0);
+		} else {
+			$read_bytes = read(STDIN, $buffer, $read_length,0);
+		}
 	}
 	$CGI::Minimal::_BUFFER = \$buffer;
 	$vars->{'form_truncated'} = ($read_bytes < $clen) ? 1 : 0;
 
 	my $content_type = defined($ENV{'CONTENT_TYPE'}) ? $ENV{'CONTENT_TYPE'} : '';
+	if ((!$content_type) and (2 == $CGI::Minimal::_mod_perl)) {
+		$content_type = $r->headers_in->get('Content-Type');
+	}
 
 	# Boundaries are supposed to consist of only the following
 	# (1-70 of them, not ending in ' ') A-Za-z0-9 '()+,_-./:=?
@@ -283,18 +314,21 @@ sub _read_get {
 	my $self = shift;
 
 	my $buffer = '';
+	my $req_method = $ENV{'REQUEST_METHOD'};
 	if (1 == $CGI::Minimal::_mod_perl) {
 		$buffer = Apache->request->args;
 	} elsif (2 == $CGI::Minimal::_mod_perl) {
 		my $r = Apache2::RequestUtil->request;
 		$buffer = $r->args;
 		$r->discard_request_body();
-		$r->subprocess_env unless exists $ENV{'REQUEST_METHOD'};
-
+                unless (exists($ENV{'REQUEST_METHOD'}) || $CGI::Minimal::_no_subprocess_env) {
+			$r->subprocess_env;
+		}
+		$req_method = $r->method unless ($req_method);
 	} else {
 		$buffer = $ENV{'QUERY_STRING'} if (defined $ENV{'QUERY_STRING'});
 	}
-	if ($ENV{'REQUEST_METHOD'} ne 'POST') {
+	if ($req_method ne 'POST') {
 		$CGI::Minimal::_BUFFER = \$buffer;
 	}
 	$self->_burst_URL_encoded_buffer($buffer,'[;&]');
@@ -390,7 +424,7 @@ sub _utf8_chr {
 
 sub htmlize {
 	my $self = shift;
- 
+
 	my ($s)=@_;
 	return ('') if (! defined($s));
 	$s =~ s/\&/\&amp;/gs;

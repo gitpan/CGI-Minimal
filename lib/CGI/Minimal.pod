@@ -5,6 +5,7 @@ CGI::Minimal - A lightweight CGI form processing package
 
 =head1 SYNOPSIS
 
+ # use CGI::Minimal qw(:no_subprocess_env);
  # use CGI::Minimal qw(:preload);
  use CGI::Minimal;
 
@@ -32,6 +33,11 @@ configurations. When used, it preloads the 'dehtmlize',' param_mime',
 'param_filename', 'date_rfc1123', 'url_decode', 'calling_parms_table'
 and parameter setting supporting code. Those code sections
 are normally loaded automatically the first time they are needed.
+
+The ':no_subprocess_env' use time option is used under ModPerl2
+to suppress populating the %ENV hash with the usual CGI environmental
+variables. This is primarily a performance enhancement for some
+configurations.
 
 The form decoding interface is somewhat compatible with the
 CGI.pm module. No provision is made for generating HTTP or HTML
@@ -90,6 +96,21 @@ The ':preload' option is available in CGI::Minimal (C<use CGI::Minimal qw (:prel
 to compile all sub-components of the module at initial load time. This will I<slowdown>
 your script unless you are using one or more of the following methods:
 
+The ':no_subprocess_env' option is available (C<use CGI::Minimal qw (:no_subprocess_env);>)
+to suppress population of the %ENV hash with the standard CGI environment values when
+running under ModPerl2. This improves performance slightly under ModPerl2, but does not
+affect anything when running as standard CGI or under ModPerl1. 
+
+B<WARNING:> Due to the 'singleton' pattern used by CGI::Minimal, the C<:no_subprocess_env> option
+is B<persistent between scripts>, if you use it in any script, it may affect B<any> ModPerl2
+script running on the same Apache instance that uses CGI::Minimal if they run after a script
+that I<does> use ':no_subprocess_env'.
+
+This would manifest as the %ENV hash as being unexpectedly mostly empty in a script that
+B<didn't> use ':no_subprocess_env'. The fix for this is to call the C<CGI::Minimal::subprocess_env>
+class method in any script that requires the %ENV hash to be populated if it is sharing an Apache
+instance with scripts that use ':no_subprocess_env'.
+
  dehtmlize       param_mime    param_filename
  date_rfc1123    url_decode    calling_parms_table
 
@@ -139,7 +160,14 @@ results (sorted by speed):
 
 =head1 CHANGES
 
- 1.27 25 May 2008 - Added example of a command line 'wrapper' script and
+ 1.28 18 Aug 2007 - Improved mod_perl2 handling (patch courtesy of Jeremy Nixon).
+                    Added a ':no_subprocess_env' flag to suppress populating
+                    the %ENV environment hash. Added a 'subprocess_env'
+                    static class method to allow smooth co-existance of
+                    ModPerl2 scripts that use ':no_subprocess_env' with ModPerl2
+                    scripts that do not on the same server.
+
+ 1.27 25 May 2007 - Added example of a command line 'wrapper' script and
                     of using environment variables as an alternate way
                     to test scripts via the command line. Added example
                     for use with FastCGI. Changed behavior for unsupported
@@ -659,6 +687,38 @@ Ex.:
 
 =back
 
+=over 4
+
+=item CGI::Minimal::subprocess_env;
+
+Under ModPerl2, this imports the CGI environment variables into
+the %ENV hash. Under either a standard CGI invokation or ModPerl1,
+it does nothing. It is intended for use in scripts sharing a ModPerl2
+Apache instance with scripts that use the ':no_subprocess_env' flag.
+
+Because of the 'singleton' pattern used by CGI::Minimal, if one ModPerl2 script
+sets the ':no_subprocess_env' flag, other scripts may be affected by it (which
+would manifest as mysteriously missing %ENV hash values).
+
+To prevent that from happening, add
+
+C<CGI::Minimal::subprocess_env;>
+
+to that scripts that need %ENV to be populated if they share an Apache instance
+with other scripts that B<DO> use the C<:no_subprocess_env> flag. 
+
+Example:
+
+ use CGI::Minimal
+
+ CGI::Minimal::subprocess_env();
+ my $cgi = CGI::Minimal->new;
+
+The method has no effect on regular CGI or ModPerl1 scripts and can be safely
+invoked in them without harm.
+
+=back
+
 =cut
 
 =head1 BUGS
@@ -675,11 +735,11 @@ Benjamin Franz <snowhare@nihongo.org>
 
 =head1 VERSION
 
-Version 1.27 25 May 2007 
+Version 1.28 18 Aug 2007 
 
 =head1 COPYRIGHT
 
-Copyright (c) Benjamin Franz 1999-2005. All rights reserved.
+Copyright (c) Benjamin Franz. All rights reserved.
 
 =head1 LICENSE
 

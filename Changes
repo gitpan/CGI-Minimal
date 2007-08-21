@@ -1,4 +1,12 @@
- 1.27 25 May 2008 - Added example of a command line 'wrapper' script and
+
+ 1.28 18 Aug 2007 - Improved mod_perl2 handling (patch courtesy of Jeremy Nixon).
+                    Added a ':no_subprocess_env' flag to suppress populating
+                    the %ENV environment hash. Added a 'subprocess_env'
+                    static class method to allow smooth co-existance of
+                    ModPerl2 scripts that use ':no_subprocess_env' with ModPerl2
+                    scripts that do not on the same server.
+
+1.27 25 May 2007 - Added example of a command line 'wrapper' script and
                     of using environment variables as an alternate way
                     to test scripts via the command line. Added example
                     for use with FastCGI. Changed behavior for unsupported
